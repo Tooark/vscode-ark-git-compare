@@ -11,7 +11,7 @@ permissions:
   packages: read
 
 env:
-  TRIVY_SCANNER_IMAGE: ghcr.io/tooark/trivy-hadolint:latest
+  TRIVY_SCANNER_IMAGE: ghcr.io/tooark/trivy-hadolint:1.70
 
 jobs:
   release-meta:
