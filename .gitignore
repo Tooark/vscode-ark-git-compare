@@ -1,6 +1,23 @@
-out
-dist
-node_modules
-.vscode-test/
+# Editor
 .vscode/
+
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+**/out/
+
+# Test artifacts
+coverage/
+.vscode-test/
+
+# Package artifacts
 *.vsix
+
+# Environment & secrets
+.env
+
+# OS artifacts
+.DS_Store
+*.log

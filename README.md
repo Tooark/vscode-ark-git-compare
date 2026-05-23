@@ -6,15 +6,15 @@ Extensão para o Visual Studio Code que permite comparar branches e commits do G
 
 ### Comparar commits
 
-![Comparar commits](https://raw.githubusercontent.com/Tooark/vscode-git-compare/main/media/compare.gif)
+![Comparar commits](https://raw.githubusercontent.com/Tooark/vscode-ark-git-compare/main/media/compare.gif)
 
 ### Expandir em tela cheia
 
-![Modo tela cheia](https://raw.githubusercontent.com/Tooark/vscode-git-compare/main/media/full-screen.gif)
+![Modo tela cheia](https://raw.githubusercontent.com/Tooark/vscode-ark-git-compare/main/media/full-screen.gif)
 
 ### Busca de arquivos
 
-![Busca de arquivos](https://raw.githubusercontent.com/Tooark/vscode-git-compare/main/media/search.gif)
+![Busca de arquivos](https://raw.githubusercontent.com/Tooark/vscode-ark-git-compare/main/media/search.gif)
 
 ## Funcionalidades
 

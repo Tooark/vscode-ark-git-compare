@@ -13,8 +13,8 @@ const ScrollSync = {
 	/** Flag para evitar loops infinitos de sincronização */
 	isSyncing: false,
 
-	/** Timeout para debounce da sincronização */
-	syncTimeout: /** @type {number | undefined} */ (undefined),
+	/** Timeout para debounce da sincronização (compatível com Node/Browser) */
+	syncTimeout: /** @type {ReturnType<typeof setTimeout> | undefined} */ (undefined),
 
 	/**
 	 * Inicializa a sincronização de scroll para todos os pares de elementos.
@@ -109,8 +109,8 @@ const ScrollSync = {
 			target.scrollLeft = source.scrollLeft;
 
 			// Reseta flag após breve delay
-			clearTimeout(this.syncTimeout);
-			this.syncTimeout = setTimeout(() => {
+			globalThis.clearTimeout(this.syncTimeout);
+			this.syncTimeout = globalThis.setTimeout(() => {
 				this.isSyncing = false;
 			}, 1);
 		});
@@ -265,6 +265,58 @@ window.addEventListener('message', function (e) {
 	e.preventDefault();
 	const message = e.data;
 
+	/**
+	 * Sanitiza HTML dinâmico antes de inserir no DOM do webview.
+	 * Remove tags perigosas, handlers inline e URLs javascript:.
+	 * @param {unknown} unsafeHtml Conteúdo HTML potencialmente inseguro
+	 * @returns {DocumentFragment}
+	 */
+	function sanitizeHtml(unsafeHtml) {
+		const fragment = document.createDocumentFragment();
+
+		if (typeof unsafeHtml !== 'string') {
+			return fragment;
+		}
+
+		const parser = new DOMParser();
+		const parsed = parser.parseFromString(unsafeHtml, 'text/html');
+		const root = parsed.body;
+
+		const blockedTags = new Set(['script', 'iframe', 'object', 'embed', 'link', 'meta', 'base', 'form']);
+		const elements = root.querySelectorAll('*');
+
+		for (const element of elements) {
+			const tagName = element.tagName.toLowerCase();
+			if (blockedTags.has(tagName)) {
+				element.remove();
+				continue;
+			}
+
+			for (const attribute of Array.from(element.attributes)) {
+				const attributeName = attribute.name.toLowerCase();
+				const attributeValue = attribute.value.trim();
+
+				if (attributeName.startsWith('on') || attributeName === 'srcdoc') {
+					element.removeAttribute(attribute.name);
+					continue;
+				}
+
+				if (
+					(attributeName === 'src' || attributeName === 'href' || attributeName === 'xlink:href' || attributeName === 'formaction') &&
+					/^javascript:/i.test(attributeValue)
+				) {
+					element.removeAttribute(attribute.name);
+				}
+			}
+		}
+
+		while (root.firstChild) {
+			fragment.appendChild(root.firstChild);
+		}
+
+		return fragment;
+	}
+
 	if (message.command === 'syncSelection') {
 		const hash1 = /** @type {HTMLInputElement} */ (document.getElementById('git-hash-1'));
 		const hash2 = /** @type {HTMLInputElement} */ (document.getElementById('git-hash-2'));
@@ -281,7 +333,8 @@ window.addEventListener('message', function (e) {
 		const resultDiv = document.getElementById('git-diff-result');
 
 		if (resultDiv) {
-			resultDiv.innerHTML = message.html;
+			const sanitizedContent = sanitizeHtml(message.html);
+			resultDiv.replaceChildren(sanitizedContent);
 
 			// Re-inicializa a sincronização de scroll para novos elementos
 			setTimeout(() => {

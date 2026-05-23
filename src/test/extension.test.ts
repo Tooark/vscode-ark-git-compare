@@ -29,17 +29,14 @@ suite('Extension Test Suite', () => {
 		const packageJson = getPackageJson();
 		const commandIds = (packageJson.contributes?.commands || []).map((c: { command: string }) => c.command);
 
-		assert.ok(commandIds.includes('vscode-git-compare.compareCommits'));
-		assert.ok(commandIds.includes('vscode-git-compare.compareFromSidebar'));
-		assert.ok(commandIds.includes('vscode-git-compare.refreshSidebar'));
+		assert.ok(commandIds.includes('vscode-ark-git-compare.compareCommits'));
+		assert.ok(commandIds.includes('vscode-ark-git-compare.compareFromSidebar'));
+		assert.ok(commandIds.includes('vscode-ark-git-compare.refreshSidebar'));
 	});
 
-	test('Manifesto deve declarar activation events esperados', () => {
+	test('Manifesto pode omitir activationEvents explicitos', () => {
 		const packageJson = getPackageJson();
-		const activationEvents = packageJson.activationEvents || [];
-
-		assert.ok(activationEvents.includes('onCommand:vscode-git-compare.compareCommits'));
-		assert.ok(activationEvents.includes('onView:gitCompareView'));
+		assert.ok(!('activationEvents' in packageJson) || Array.isArray(packageJson.activationEvents));
 	});
 
 	test('Manifesto deve declarar a view lateral gitCompareView', () => {
@@ -53,6 +50,6 @@ suite('Extension Test Suite', () => {
 	test('Comando de comparação deve estar visível na Command Palette', async () => {
 		await activateCurrentExtension();
 		const commands = await vscode.commands.getCommands(true);
-		assert.ok(commands.includes('vscode-git-compare.compareCommits'));
+		assert.ok(commands.includes('vscode-ark-git-compare.compareCommits'));
 	});
 });

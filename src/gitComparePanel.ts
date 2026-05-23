@@ -11,7 +11,7 @@ import { renderDiffHtml } from './diffRenderer';
  */
 export class GitComparePanel {
 	public static currentPanel: GitComparePanel | undefined;
-	public static readonly viewType = 'vscode-git-compare';
+	public static readonly viewType = 'vscode-ark-git-compare';
 
 	private readonly _panel: vscode.WebviewPanel;
 	private readonly _extensionUri: vscode.Uri;
@@ -104,7 +104,7 @@ export class GitComparePanel {
 					return;
 				case 'compare':
 					if (message.hash1 && message.hash2) {
-						void vscode.commands.executeCommand('vscode-git-compare.compareCommits', message.hash1, message.hash2);
+						void vscode.commands.executeCommand('vscode-ark-git-compare.compareCommits', message.hash1, message.hash2);
 					}
 					return;
 			}

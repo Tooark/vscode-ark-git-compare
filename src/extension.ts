@@ -8,7 +8,7 @@ import { GitComparePanel } from './gitComparePanel';
  * Esta extensão do Visual Studio Code permite comparar commits do Git
  * e exibir as diferenças entre dois commits/branches.
  *
- * O comando `vscode-git-compare.compareCommits` abre um painel de webview
+ * O comando `vscode-ark-git-compare.compareCommits` abre um painel de webview
  * que mostra as diferenças entre os arquivos alterados entre dois commits/branches.
  * 
  * @param context O contexto da extensão, fornecido pelo VS Code, usado para registrar comandos e gerenciar recursos.
@@ -21,7 +21,7 @@ export function activate(context: vscode.ExtensionContext) {
 	// Registra o provedor de dados da árvore para a visualização da sidebar e os comandos relacionados.
 	context.subscriptions.push(
 		vscode.window.registerTreeDataProvider('gitCompareView', sidebarProvider),
-		vscode.commands.registerCommand('vscode-git-compare.compareCommits', async (ref1?: string, ref2?: string) => {
+		vscode.commands.registerCommand('vscode-ark-git-compare.compareCommits', async (ref1?: string, ref2?: string) => {
 			if (ref1 && ref2) {
 				await sidebarProvider.syncSelectedRefs(ref1, ref2);
 				await GitComparePanel.compareRefs(context.extensionUri, ref1, ref2);
@@ -30,16 +30,16 @@ export function activate(context: vscode.ExtensionContext) {
 
 			GitComparePanel.createOrShow(context.extensionUri);
 		}),
-		vscode.commands.registerCommand('vscode-git-compare.selectBranch', async (slot: BranchSlot) => {
+		vscode.commands.registerCommand('vscode-ark-git-compare.selectBranch', async (slot: BranchSlot) => {
 			await sidebarProvider.selectBranch(slot);
 		}),
-		vscode.commands.registerCommand('vscode-git-compare.selectCommitForBranch', async (slot: BranchSlot, branch: string, commitHash: string) => {
+		vscode.commands.registerCommand('vscode-ark-git-compare.selectCommitForBranch', async (slot: BranchSlot, branch: string, commitHash: string) => {
 			await sidebarProvider.selectCommitForBranch(slot, branch, commitHash);
 		}),
-		vscode.commands.registerCommand('vscode-git-compare.compareFromSidebar', async () => {
+		vscode.commands.registerCommand('vscode-ark-git-compare.compareFromSidebar', async () => {
 			await sidebarProvider.compareFromSidebar();
 		}),
-		vscode.commands.registerCommand('vscode-git-compare.refreshSidebar', () => {
+		vscode.commands.registerCommand('vscode-ark-git-compare.refreshSidebar', () => {
 			sidebarProvider.refresh();
 		})
 	);

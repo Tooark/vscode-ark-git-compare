@@ -152,7 +152,7 @@ export class GitCompareSidebarProvider implements vscode.TreeDataProvider<Sideba
 			return;
 		}
 
-		await vscode.commands.executeCommand('vscode-git-compare.compareCommits', ref1, ref2);
+		await vscode.commands.executeCommand('vscode-ark-git-compare.compareCommits', ref1, ref2);
 	}
 
 	/**
@@ -197,7 +197,7 @@ export class GitCompareSidebarProvider implements vscode.TreeDataProvider<Sideba
 				item.description = selectedCommit ? t('sidebar.commitDescription', { hash: selectedCommit.hash }) : t('sidebar.branchHeadDescription');
 				item.iconPath = new vscode.ThemeIcon('git-branch');
 				item.command = {
-					command: 'vscode-git-compare.selectBranch',
+					command: 'vscode-ark-git-compare.selectBranch',
 					title: 'Selecionar Branch',
 					arguments: [element.slot]
 				};
@@ -210,7 +210,7 @@ export class GitCompareSidebarProvider implements vscode.TreeDataProvider<Sideba
 				item.description = `${this._getRef('branch1') || '?'}..${this._getRef('branch2') || '?'}`;
 				item.iconPath = new vscode.ThemeIcon('git-compare');
 				item.command = {
-					command: 'vscode-git-compare.compareFromSidebar',
+					command: 'vscode-ark-git-compare.compareFromSidebar',
 					title: t('sidebar.compareCommandTitle'),
 					arguments: []
 				};
@@ -236,7 +236,7 @@ export class GitCompareSidebarProvider implements vscode.TreeDataProvider<Sideba
 				item.tooltip = `${element.commit.message}\n${element.commit.author} • ${element.commit.date}\n${t('sidebar.branchTooltip', { branch: element.branch })}`;
 				item.iconPath = new vscode.ThemeIcon(isSelected ? 'check' : 'git-commit');
 				item.command = {
-					command: 'vscode-git-compare.selectCommitForBranch',
+					command: 'vscode-ark-git-compare.selectCommitForBranch',
 					title: 'Selecionar Commit para Comparação',
 					arguments: [element.slot, element.branch, element.commit.hash]
 				};
