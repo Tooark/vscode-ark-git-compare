@@ -393,6 +393,8 @@ export class GitComparePanel {
 	 * @returns O HTML completo que será carregado no webview.
 	 */
 	private _getHtmlForWebview(webview: vscode.Webview, content: string) {
+		const purifyPath = vscode.Uri.joinPath(this._extensionUri, 'media', 'purify.min.js');
+		const purifyUri = webview.asWebviewUri(purifyPath);
 		const scriptPath = vscode.Uri.joinPath(this._extensionUri, 'media', 'main.js');
 		const scriptUri = webview.asWebviewUri(scriptPath);
 
@@ -402,6 +404,7 @@ export class GitComparePanel {
 
 		const nonce = getNonce();
 
+		const purifyScript = `<script nonce="${nonce}" src="${purifyUri}"></script>`;
 		const syncScrollScript = `<script nonce="${nonce}" src="${scriptUri}"></script>`;
 		const webviewI18n = {
 			loadingDiff: t('webview.loadingDiff'),
@@ -426,6 +429,7 @@ export class GitComparePanel {
 				<h1 class="bold">${t('panel.title')}</h1>
 				${content}
 				${i18nScript}
+				${purifyScript}
 				${syncScrollScript}
 			</body>
 			</html>

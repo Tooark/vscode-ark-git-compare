@@ -267,7 +267,7 @@ window.addEventListener('message', function (e) {
 
 	/**
 	 * Sanitiza HTML dinâmico antes de inserir no DOM do webview.
-	 * Remove tags perigosas, handlers inline e URLs javascript:.
+	 * Usa DOMPurify para preservar estrutura visual e bloquear XSS.
 	 * @param {unknown} unsafeHtml Conteúdo HTML potencialmente inseguro
 	 * @returns {DocumentFragment}
 	 */
@@ -278,41 +278,31 @@ window.addEventListener('message', function (e) {
 			return fragment;
 		}
 
-		const parser = new DOMParser();
-		const parsed = parser.parseFromString(unsafeHtml, 'text/html');
-		const root = parsed.body;
-
-		const blockedTags = new Set(['script', 'iframe', 'object', 'embed', 'link', 'meta', 'base', 'form']);
-		const elements = root.querySelectorAll('*');
-
-		for (const element of elements) {
-			const tagName = element.tagName.toLowerCase();
-			if (blockedTags.has(tagName)) {
-				element.remove();
-				continue;
-			}
-
-			for (const attribute of Array.from(element.attributes)) {
-				const attributeName = attribute.name.toLowerCase();
-				const attributeValue = attribute.value.trim();
-
-				if (attributeName.startsWith('on') || attributeName === 'srcdoc') {
-					element.removeAttribute(attribute.name);
-					continue;
-				}
-
-				if (
-					(attributeName === 'src' || attributeName === 'href' || attributeName === 'xlink:href' || attributeName === 'formaction') &&
-					/^javascript:/i.test(attributeValue)
-				) {
-					element.removeAttribute(attribute.name);
-				}
-			}
+		const purify = /** @type {{ sanitize?: (input: string, config?: object) => any } | undefined} */ (/** @type {any} */ (window).DOMPurify);
+		if (!purify || typeof purify.sanitize !== 'function') {
+			const safeText = document.createTextNode(unsafeHtml);
+			fragment.appendChild(safeText);
+			return fragment;
 		}
 
-		while (root.firstChild) {
-			fragment.appendChild(root.firstChild);
+		const sanitized = purify.sanitize(unsafeHtml, {
+			RETURN_DOM_FRAGMENT: true,
+			USE_PROFILES: { html: true },
+			FORBID_TAGS: ['script', 'iframe', 'object', 'embed', 'link', 'meta', 'base', 'form']
+		});
+
+		if (sanitized instanceof DocumentFragment) {
+			fragment.appendChild(sanitized);
+			return fragment;
 		}
+
+		if (sanitized instanceof Node) {
+			fragment.appendChild(sanitized);
+			return fragment;
+		}
+
+		const safeText = document.createTextNode(String(sanitized ?? ''));
+		fragment.appendChild(safeText);
 
 		return fragment;
 	}
