@@ -58,6 +58,11 @@ const MESSAGES: Record<string, Record<string, string>> = {
 		'webview.statusError': 'Error',
 		'webview.toggleTitle': 'Collapse/Expand',
 		'webview.fullscreenEnter': 'Expand to fullscreen',
+		'extension.invalidCompareArgs': 'Git Compare: invalid comparison arguments.',
+		'extension.invalidBranchSlot': 'Git Compare: invalid branch slot.',
+		'extension.invalidCommitArgs': 'Git Compare: invalid commit arguments.',
+		'webview.invalidMessage': 'Git Compare: invalid message received from webview.',
+		'webview.unknownError': 'Unknown error.',
 		'webview.lang': 'en'
 	},
 	'pt-br': {
@@ -112,6 +117,11 @@ const MESSAGES: Record<string, Record<string, string>> = {
 		'webview.statusError': 'Erro',
 		'webview.toggleTitle': 'Colapsar/Expandir',
 		'webview.fullscreenEnter': 'Expandir em tela cheia',
+		'extension.invalidCompareArgs': 'Git Compare: argumentos de comparação inválidos.',
+		'extension.invalidBranchSlot': 'Git Compare: slot de branch inválido.',
+		'extension.invalidCommitArgs': 'Git Compare: argumentos de commit inválidos.',
+		'webview.invalidMessage': 'Git Compare: mensagem inválida recebida da webview.',
+		'webview.unknownError': 'Erro desconhecido.',
 		'webview.lang': 'pt-br'
 	}
 };

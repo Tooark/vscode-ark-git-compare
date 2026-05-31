@@ -2,7 +2,7 @@
 	"name": "git-compare",
 	"displayName": "%displayName%",
 	"description": "%description%",
-	"version": "1.0.3",
+	"version": "1.0.4",
 	"publisher": "tooark",
 	"license": "MIT",
 	"tags": [

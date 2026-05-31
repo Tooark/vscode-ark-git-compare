@@ -12,6 +12,7 @@ import { renderDiffHtml } from './diffRenderer';
 export class GitComparePanel {
 	public static currentPanel: GitComparePanel | undefined;
 	public static readonly viewType = 'vscode-ark-git-compare';
+	private static readonly SAFE_REF_PATTERN = /^[A-Za-z0-9._\/@~^{}-]{1,200}$/;
 
 	private readonly _panel: vscode.WebviewPanel;
 	private readonly _extensionUri: vscode.Uri;
@@ -19,6 +20,58 @@ export class GitComparePanel {
 	private _selectedRef1 = '';
 	private _selectedRef2 = '';
 	private _disposables: vscode.Disposable[] = [];
+
+  /**
+   * Função de tipo de guarda para verificar se um valor é uma referência Git segura (branch, tag ou commit hash).
+   * @param value O valor a ser verificado.
+   * @returns true se o valor for uma string que corresponde ao padrão de referência Git segura, caso contrário, false.
+   * @remarks Esta função é usada para validar os inputs recebidos do painel de comparação, garantindo que apenas
+   * referências Git válidas sejam processadas. Ela verifica se o valor é uma string e se corresponde ao padrão
+   * definido pela expressão regular SAFE_REF_PATTERN, que permite letras, números, pontos, sublinhados, barras,
+   * arrobas, til, acentos circunflexos, chaves e hífens, com um comprimento máximo de 200 caracteres.
+   */
+	private isSafeRef(value: unknown): value is string {
+		return typeof value === 'string' && GitComparePanel.SAFE_REF_PATTERN.test(value.trim());
+	}
+
+  /**
+   * Função para analisar mensagens recebidas do webview.
+   * @param message A mensagem recebida do webview a ser analisada.
+   * @returns Um objeto contendo o comando e os dados relevantes se a mensagem for válida, ou null se a mensagem for inválida.
+   * @remarks Ela verifica se a mensagem é um objeto válido e se contém os campos esperados para os comandos 'alert' e 'compare'.
+   * Para o comando 'alert', ela espera um campo 'text' do tipo string. Para o comando 'compare', ela espera os campos 'hash1'
+   * e 'hash2', ambos do tipo string e que correspondam ao padrão de referência Git segura. Se a mensagem for válida, a função
+   * retorna um objeto contendo o comando e os dados relevantes; caso contrário, retorna null.
+   */
+	private parseWebviewMessage(message: unknown): { command: string; text?: string; hash1?: string; hash2?: string } | null {
+    // Verifica se a mensagem é um objeto válido antes de tentar acessar suas propriedades.
+		if (!message || typeof message !== 'object') {
+			return null;
+		}
+
+    // Faz um cast seguro da mensagem para um tipo conhecido, permitindo a validação dos campos esperados.
+		const payload = message as { command?: unknown; text?: unknown; hash1?: unknown; hash2?: unknown };
+		if (typeof payload.command !== 'string') {
+			return null;
+		}
+
+    // Valida o comando 'alert'
+		if (payload.command === 'alert') {
+			return typeof payload.text === 'string' ? { command: 'alert', text: payload.text } : null;
+		}
+
+    // Valida o comando 'compare'
+		if (payload.command === 'compare') {
+      // Verifica se os campos hash1 e hash2 são strings válidas
+			if (!this.isSafeRef(payload.hash1) || !this.isSafeRef(payload.hash2)) {
+				return null;
+			}
+
+			return { command: 'compare', hash1: payload.hash1.trim(), hash2: payload.hash2.trim() };
+		}
+
+		return null;
+	}
 
 	/**
 	 * Cria ou mostra o painel de comparação. Se o painel já estiver aberto, ele será revelado. Caso contrário, um novo painel será criado.
@@ -98,14 +151,19 @@ export class GitComparePanel {
 		}, null, this._disposables);
 
 		this._panel.webview.onDidReceiveMessage(message => {
-			switch (message.command) {
+      // Verifica se a mensagem recebida do webview é válida e contém os campos esperados antes de processá-la.
+			const parsed = this.parseWebviewMessage(message);
+			if (!parsed) {
+				vscode.window.showWarningMessage(t('webview.invalidMessage'));
+				return;
+			}
+
+			switch (parsed.command) {
 				case 'alert':
-					vscode.window.showErrorMessage(message.text);
+					vscode.window.showErrorMessage(parsed.text || t('webview.unknownError'));
 					return;
 				case 'compare':
-					if (message.hash1 && message.hash2) {
-						void vscode.commands.executeCommand('vscode-ark-git-compare.compareCommits', message.hash1, message.hash2);
-					}
+					void vscode.commands.executeCommand('vscode-ark-git-compare.compareCommits', parsed.hash1, parsed.hash2);
 					return;
 			}
 		}, null, this._disposables);

@@ -1,19 +1,23 @@
 import * as vscode from 'vscode';
-import { exec } from 'child_process';
+import { execFile } from 'child_process';
 import { promisify } from 'util';
 import type { BranchInfo, CommitInfo, DiffHunk, DiffLine, FileDiff, FileStatus } from './types';
 
 /**
- * Serviço para interagir com o Git.
- * Fornece métodos para obter branches, commits, diffs e conteúdo de arquivos.
+ * Função auxiliar para executar comandos Git de forma assíncrona usando execFile.
  */
-const execAsync = promisify(exec);
+const execFileAsync = promisify(execFile);
 
 /**
  * Serviço para interagir com o Git.
  * Fornece métodos para obter branches, commits, diffs e conteúdo de arquivos.
  */
 export class GitService {
+  // Define um buffer máximo para a saída dos comandos Git para evitar problemas com repositórios grandes
+	private static readonly MAX_BUFFER = 10 * 1024 * 1024;
+  // Define um padrão regex para validar referências Git (branches, tags, commits)
+	private static readonly SAFE_REF_PATTERN = /^[A-Za-z0-9._\/@~^{}-]{1,200}$/;
+
 	/**
 	 * Construtor do serviço Git.
 	 * @param workspaceRoot Caminho para o diretório raiz do workspace (repositório Git)
@@ -21,28 +25,125 @@ export class GitService {
 	constructor(private workspaceRoot: string) { }
 
 	/**
-	 * Executa um comando Git no diretório de trabalho.
-	 * @param command Comando a ser executado
-	 * @returns Saída do comando
+	 * Executa um comando Git com argumentos separados, sem invocar shell.
+	 * @param args Argumentos do comando git.
+	 * @returns Saída do comando.
+   * @throws Erro com a mensagem de stderr se o comando falhar.
+   * @remarks Este método é a base para todos os outros métodos do serviço Git, garantindo que os comandos
+   * sejam executados de forma segura e eficiente, sem riscos de injeção de comandos.
+   * Ele captura erros e retorna mensagens de erro detalhadas para facilitar o diagnóstico de problemas.
+   * @example
+   * ```typescript
+   * const gitService = new GitService('/path/to/workspace');
+   * const branches = await gitService.runGit(['branch', '-a']);
+   * console.log(branches);
+   * // Saída do comando `git branch -a`
+   * ```
 	 */
-	private async exec(command: string): Promise<string> {
+	private async runGit(args: string[]): Promise<string> {
 		try {
-			const { stdout } = await execAsync(command, {
+			const { stdout } = await execFileAsync('git', args, {
 				cwd: this.workspaceRoot,
-				maxBuffer: 10 * 1024 * 1024 // 10MB para arquivos grandes
+				maxBuffer: GitService.MAX_BUFFER,
+				windowsHide: true
 			});
 
 			return stdout.trim();
 		} catch (error) {
-			const err = error as Error & { stderr?: string };
+			const err = error as Error & { stderr?: string | Buffer };
+			const stderr = typeof err.stderr === 'string' ? err.stderr : err.stderr?.toString('utf8');
 
-			throw new Error(err.stderr || err.message);
+			throw new Error(stderr || err.message);
 		}
+	}
+
+  /**
+   * Valida uma referência Git (branch, tag ou commit) para garantir que seja segura para uso em comandos Git.
+   * @param ref Referência a ser validada.
+   * @param fieldName Nome do campo para mensagens de erro (opcional).
+   * @returns A referência validada e normalizada.
+   * @throws Erro se a referência for inválida ou potencialmente insegura.
+   * @remarks Este método verifica se a referência é uma string, remove espaços em branco e valida contra um
+   * padrão regex seguro. Ele é usado para garantir que as referências fornecidas pelos usuários sejam seguras
+   * para uso em comandos Git, evitando riscos de injeção de comandos ou erros causados por referências malformadas.
+   * @example
+   * ```typescript
+   * const gitService = new GitService('/path/to/workspace');
+   * const safeRef = gitService.validateRef('main');
+   * console.log(safeRef); // 'main'
+   * ```
+   */
+	private validateRef(ref: string, fieldName: string = 'ref'): string {
+    // Verifica se a referência é uma string
+		if (typeof ref !== 'string') {
+			throw new Error(`Referencia Git invalida em ${fieldName}.`);
+		}
+
+    // Normaliza a referência removendo espaços em branco e validando contra o padrão seguro
+		const normalizedRef = ref.trim();
+		if (!GitService.SAFE_REF_PATTERN.test(normalizedRef)) {
+			throw new Error(`Referencia Git invalida em ${fieldName}.`);
+		}
+
+		return normalizedRef;
+	}
+
+	/**
+	 * Valida o limite de commits para garantir que esteja dentro de um intervalo aceitável.
+	 * @param limit Limite a ser validado.
+	 * @returns O limite validado.
+	 * @throws Erro se o limite for inválido.
+   * @remarks Este método verifica se o limite é um número inteiro e se está dentro do intervalo permitido (1 a 500).
+   * Ele é usado para garantir que os limites fornecidos pelos usuários para consultas de commits sejam razoáveis e
+   * não causem problemas de desempenho.
+   * @example
+   * ```typescript
+   * const gitService = new GitService('/path/to/workspace');
+   * const safeLimit = gitService.validateLimit(100);
+   * console.log(safeLimit); // 100
+   * ```
+	 */
+	private validateLimit(limit: number): number {
+    // Verifica se o limite é um número inteiro dentro do intervalo permitido (1 a 500)
+		if (!Number.isInteger(limit) || limit < 1 || limit > 500) {
+			throw new Error('Limite de commits invalido.');
+		}
+
+		return limit;
+	}
+
+  /**
+   * Valida um caminho de arquivo para garantir que seja seguro para uso em comandos Git.
+   * @param filePath Caminho do arquivo a ser validado.
+   * @returns O caminho do arquivo validado e normalizado.
+   * @throws Erro se o caminho do arquivo for inválido ou potencialmente inseguro.
+   * @remarks Este método verifica se o caminho do arquivo é uma string, normaliza o caminho e valida contra
+   * padrões inseguros. Ele é usado para garantir que os caminhos fornecidos pelos usuários sejam seguros para
+   * uso em comandos Git, evitando riscos de injeção de comandos ou erros causados por caminhos malformados.
+   * @example
+   * ```typescript
+   * const gitService = new GitService('/path/to/workspace');
+   * const safePath = gitService.validatePathSpec('src/index.ts');
+   * console.log(safePath); // 'src/index.ts'
+   * ```
+   */
+	private validatePathSpec(filePath: string): string {
+    // Verifica se o caminho do arquivo é uma string
+		if (typeof filePath !== 'string') {
+			throw new Error('Caminho de arquivo invalido.');
+		}
+
+    // Normaliza o caminho do arquivo, convertendo barras invertidas para barras normais e removendo espaços em branco
+		const normalizedPath = filePath.replace(/\\/g, '/').trim();
+		if (!normalizedPath || normalizedPath.startsWith('/') || normalizedPath.includes('..') || /[\0\r\n]/.test(normalizedPath)) {
+			throw new Error('Caminho de arquivo invalido.');
+		}
+
+		return normalizedPath;
 	}
 
 	/**
 	 * Faz parse do output do git diff em hunks estruturados.
-	 * 
 	 * @param diffOutput Output do comando git diff
 	 * @return Lista de hunks de diferença, cada um contendo as linhas alteradas e seus números de linha correspondentes.
 	 * @remarks Este método interpreta a saída formatada do comando `git diff` para identificar os blocos de diferença (hunks)
@@ -138,7 +239,6 @@ export class GitService {
 
 	/**
 	 * Converte saída formatada de `git log` em lista tipada de commits.
-	 * 
 	 * @param result Saída do comando `git log` formatada com delimitadores personalizados
 	 * @return Lista de objetos CommitInfo contendo hash, mensagem, autor e data de cada commit
 	 * @remarks Este método é responsável por interpretar a saída do comando `git log` que foi formatada com
@@ -175,7 +275,6 @@ export class GitService {
 
 	/**
 	 * Verifica se o diretório atual é um repositório Git.
-	 * 
 	 * @returns `true` se for um repositório Git, `false` caso contrário.
 	 * @throws Erro se o comando Git falhar por algum motivo (ex: Git não instalado).
 	 * @remarks Este método tenta executar um comando Git simples para verificar a presença
@@ -189,7 +288,7 @@ export class GitService {
 	 */
 	async isGitRepository(): Promise<boolean> {
 		try {
-			await this.exec('git rev-parse --git-dir');
+			await this.runGit(['rev-parse', '--git-dir']);
 			return true;
 		} catch {
 			return false;
@@ -198,7 +297,6 @@ export class GitService {
 
 	/**
 	 * Obtém a lista de branches locais e remotos.
-	 * 
 	 * @returns Lista de branches com informações sobre cada branch
 	 * @remarks Este método executa um comando Git para listar todos os branches, tanto locais quanto remotos.
 	 * Ele formata a saída para extrair o nome do branch, se é o branch atual e se é um branch remoto.
@@ -215,7 +313,7 @@ export class GitService {
 	 * ```
 	 */
 	async getBranches(): Promise<BranchInfo[]> {
-		const result = await this.exec('git branch -a --format="%(refname:short)|%(HEAD)|%(refname)"');
+		const result = await this.runGit(['branch', '-a', '--format=%(refname:short)|%(HEAD)|%(refname)']);
 		const lines = result.split('\n').filter(Boolean);
 
 		return lines.map(line => {
@@ -230,10 +328,10 @@ export class GitService {
 
 	/**
 	 * Obtém a lista de commits recentes.
-	 * 
-	 * @param limit Número máximo de commits a retornar (padrão: 50)
-	 * @return Lista de commits com informações sobre cada commit
-	 * @remarks Este método executa um comando Git para listar os commits recentes, formatando a saída para extrair o hash curto, hash completo, mensagem, autor e data de cada commit.
+	 * @param limit Número máximo de commits a retornar (padrão: 50).
+	 * @return Lista de commits com informações sobre cada commit.
+	 * @remarks Este método executa um comando Git para listar os commits recentes, formatando a saída para extrair
+   * o hash curto, hash completo, mensagem, autor e data de cada commit.
 	 * @example
 	 * ```typescript
 	 * const gitService = new GitService('/path/to/workspace');
@@ -247,19 +345,20 @@ export class GitService {
 	 * ```
 	 */
 	async getCommits(limit: number = 50): Promise<CommitInfo[]> {
+		const safeLimit = this.validateLimit(limit);
 		const format = '%h%x1f%H%x1f%s%x1f%an%x1f%ad';
-		const result = await this.exec(`git log --pretty=format:"${format}" --date=short -n ${limit}`);
+		const result = await this.runGit(['log', `--pretty=format:${format}`, '--date=short', '-n', String(safeLimit)]);
 
 		return this.parseCommitList(result);
 	}
 
 	/**
 	 * Obtém a lista de commits de uma referência específica (branch/tag/commit).
-	 * 
-	 * @param ref Referência para filtrar o histórico
-	 * @param limit Número máximo de commits a retornar
-	 * @return Lista de commits relacionados à referência fornecida
-	 * @remarks Este método é similar ao `getCommits`, mas permite filtrar os commits por uma referência específica, como um branch ou tag. Ele formata a saída do comando Git para extrair as informações dos commits.
+	 * @param ref Referência para filtrar o histórico.
+	 * @param limit Número máximo de commits a retornar.
+	 * @return Lista de commits relacionados à referência fornecida.
+	 * @remarks Este método é similar ao `getCommits`, mas permite filtrar os commits por uma referência específica,
+   * como um branch ou tag. Ele formata a saída do comando Git para extrair as informações dos commits.
 	 * @example
 	 * ```typescript
 	 * const gitService = new GitService('/path/to/workspace');
@@ -273,19 +372,22 @@ export class GitService {
 	 * ```
 	 */
 	async getCommitsForRef(ref: string, limit: number = 20): Promise<CommitInfo[]> {
+		const safeRef = this.validateRef(ref, 'ref');
+		const safeLimit = this.validateLimit(limit);
 		const format = '%h%x1f%H%x1f%s%x1f%an%x1f%ad';
-		const result = await this.exec(`git log ${ref} --pretty=format:"${format}" --date=short -n ${limit}`);
+		const result = await this.runGit(['log', safeRef, `--pretty=format:${format}`, '--date=short', '-n', String(safeLimit)]);
 
 		return this.parseCommitList(result);
 	}
 
 	/**
 	 * Obtém a lista de arquivos alterados entre dois commits/branches.
-	 * 
-	 * @param ref1 Primeira referência (commit ou branch)
-	 * @param ref2 Segunda referência (commit ou branch)
-	 * @return Lista de arquivos com status de alteração (adicionado, modificado, deletado, renomeado)
-	 * @remarks Este método executa um comando Git para listar os arquivos que foram alterados entre duas referências, como branches ou commits. Ele interpreta a saída para determinar o status de cada arquivo (adicionado, modificado, deletado ou renomeado).
+	 * @param ref1 Primeira referência (commit ou branch).
+	 * @param ref2 Segunda referência (commit ou branch).
+	 * @return Lista de arquivos com status de alteração (adicionado, modificado, deletado, renomeado).
+	 * @remarks Este método executa um comando Git para listar os arquivos que foram alterados entre duas referências,
+   * como branches ou commits. Ele interpreta a saída para determinar o status de cada arquivo (adicionado,
+   * modificado, deletado ou renomeado).
 	 * @example
 	 * ```typescript
 	 * const gitService = new GitService('/path/to/workspace');
@@ -300,7 +402,9 @@ export class GitService {
 	 * ```
 	 */
 	async getChangedFiles(ref1: string, ref2: string): Promise<{ file: string; status: FileStatus }[]> {
-		const result = await this.exec(`git diff --name-status ${ref1}..${ref2}`);
+		const safeRef1 = this.validateRef(ref1, 'ref1');
+		const safeRef2 = this.validateRef(ref2, 'ref2');
+		const result = await this.runGit(['diff', '--name-status', `${safeRef1}..${safeRef2}`]);
 		const lines = result.split('\n').filter(Boolean);
 
 		return lines.map(line => {
@@ -309,10 +413,17 @@ export class GitService {
 
 			let status: FileStatus;
 			switch (statusCode[0]) {
-				case 'A': status = 'added'; break;
-				case 'D': status = 'deleted'; break;
-				case 'R': status = 'renamed'; break;
-				default: status = 'modified';
+				case 'A': 
+          status = 'added'; 
+          break;
+				case 'D': 
+          status = 'deleted'; 
+          break;
+				case 'R': 
+          status = 'renamed'; 
+          break;
+				default: 
+          status = 'modified';
 			}
 
 			return { file, status };
@@ -321,9 +432,8 @@ export class GitService {
 
 	/**
 	 * Obtém o conteúdo de um arquivo em um commit/branch específico.
-	 * 
-	 * @param ref Referência (commit ou branch)
-	 * @param filePath Caminho do arquivo
+	 * @param ref Referência (commit ou branch).
+	 * @param filePath Caminho do arquivo.
 	 * @return Conteúdo do arquivo na referência especificada. Retorna uma string vazia se o arquivo não existir nessa referência.
 	 * @throws Caso o comando Git falhe por algum motivo retorna uma string vazia.
 	 * @remarks Este método executa um comando Git para obter o conteúdo de um arquivo em uma referência específica,
@@ -339,7 +449,9 @@ export class GitService {
 	 */
 	async getFileContent(ref: string, filePath: string): Promise<string> {
 		try {
-			return await this.exec(`git show "${ref}":"${filePath}"`);
+			const safeRef = this.validateRef(ref, 'ref');
+			const safeFilePath = this.validatePathSpec(filePath);
+			return await this.runGit(['show', `${safeRef}:${safeFilePath}`]);
 		} catch {
 			return ''; // Arquivo não existe nesta referência
 		}
@@ -347,10 +459,9 @@ export class GitService {
 
 	/**
 	 * Obtém o diff formatado entre dois commits/branches.
-	 * 
-	 * @param ref1 Primeira referência
-	 * @param ref2 Segunda referência
-	 * @param file Arquivo específico (opcional)
+	 * @param ref1 Primeira referência.
+	 * @param ref2 Segunda referência.
+	 * @param file Arquivo específico (opcional).
 	 * @return Diferenças formatadas no estilo do comando `git diff`. Se um arquivo específico for fornecido,
 	 * retorna apenas as diferenças para esse arquivo.
 	 * @remarks Este método executa um comando Git para obter as diferenças formatadas entre duas referências,
@@ -371,17 +482,23 @@ export class GitService {
 	 * ```
 	 */
 	async getDiff(ref1: string, ref2: string, file?: string): Promise<string> {
-		const fileArg = file ? ` -- "${file}"` : '';
+		const safeRef1 = this.validateRef(ref1, 'ref1');
+		const safeRef2 = this.validateRef(ref2, 'ref2');
+		const args = ['diff', `${safeRef1}..${safeRef2}`];
 
-		return this.exec(`git diff ${ref1}..${ref2}${fileArg}`);
+    // Se um arquivo específico for fornecido, adiciona o caminho do arquivo aos argumentos do comando Git
+		if (file) {
+			args.push('--', this.validatePathSpec(file));
+		}
+
+		return this.runGit(args);
 	}
 
 	/**
 	 * Obtém as diferenças detalhadas de um arquivo entre dois commits.
-	 * 
-	 * @param ref1 Primeira referência
-	 * @param ref2 Segunda referência
-	 * @param filePath Caminho do arquivo
+	 * @param ref1 Primeira referência.
+	 * @param ref2 Segunda referência.
+	 * @param filePath Caminho do arquivo.
 	 * @return Objeto FileDiff contendo o nome do arquivo, status de alteração, conteúdo antigo,
 	 * conteúdo novo e os hunks de diferença.
 	 * @remarks Este método combina a obtenção do conteúdo antigo e novo do arquivo com o diff
@@ -402,11 +519,15 @@ export class GitService {
 	 * ```
 	 */
 	async getFileDiff(ref1: string, ref2: string, filePath: string): Promise<FileDiff> {
+		const safeRef1 = this.validateRef(ref1, 'ref1');
+		const safeRef2 = this.validateRef(ref2, 'ref2');
+		const safeFilePath = this.validatePathSpec(filePath);
+
 		const [oldContent, newContent, diffOutput, statusResult] = await Promise.all([
-			this.getFileContent(ref1, filePath),
-			this.getFileContent(ref2, filePath),
-			this.getDiff(ref1, ref2, filePath),
-			this.exec(`git diff --name-status ${ref1}..${ref2} -- "${filePath}"`)
+			this.getFileContent(safeRef1, safeFilePath),
+			this.getFileContent(safeRef2, safeFilePath),
+			this.getDiff(safeRef1, safeRef2, safeFilePath),
+			this.runGit(['diff', '--name-status', `${safeRef1}..${safeRef2}`, '--', safeFilePath])
 		]);
 
 		// Determinar status
@@ -414,9 +535,15 @@ export class GitService {
 		if (statusResult) {
 			const statusCode = statusResult[0];
 			switch (statusCode) {
-				case 'A': status = 'added'; break;
-				case 'D': status = 'deleted'; break;
-				case 'R': status = 'renamed'; break;
+				case 'A':
+          status = 'added';
+          break;
+				case 'D':
+          status = 'deleted';
+          break;
+				case 'R':
+          status = 'renamed';
+          break;
 			}
 		}
 
@@ -424,7 +551,7 @@ export class GitService {
 		const hunks = this.parseDiffHunks(diffOutput);
 
 		return {
-			fileName: filePath,
+			fileName: safeFilePath,
 			status,
 			oldContent,
 			newContent,
@@ -434,9 +561,8 @@ export class GitService {
 
 	/**
 	 * Obtém estatísticas de um diff entre dois commits.
-	 * 
-	 * @param ref1 Primeira referência
-	 * @param ref2 Segunda referência
+	 * @param ref1 Primeira referência.
+	 * @param ref2 Segunda referência.
 	 * @return Objeto contendo o número total de arquivos alterados, adições e deleções entre as duas referências.
 	 * @remarks Este método executa o comando `git diff --stat` para obter um resumo das alterações entre duas
 	 * referências, como branches ou commits. Ele interpreta a última linha da saída para extrair o número total
@@ -454,7 +580,9 @@ export class GitService {
 	 * ```
 	 */
 	async getDiffStats(ref1: string, ref2: string): Promise<{ additions: number; deletions: number; files: number }> {
-		const result = await this.exec(`git diff --stat ${ref1}..${ref2}`);
+		const safeRef1 = this.validateRef(ref1, 'ref1');
+		const safeRef2 = this.validateRef(ref2, 'ref2');
+		const result = await this.runGit(['diff', '--stat', `${safeRef1}..${safeRef2}`]);
 		const lastLine = result.split('\n').pop() || '';
 
 		// Parse: " 5 files changed, 100 insertions(+), 50 deletions(-)"
@@ -471,7 +599,6 @@ export class GitService {
 
 	/**
 	 * Obtém o nome do branch atual.
-	 * 
 	 * @return Nome do branch atual. Retorna uma string vazia se não estiver em um branch (ex: detached HEAD).
 	 * @remarks Este método executa o comando `git branch --show-current` para obter o nome do branch atual.
 	 * Se o repositório estiver em um estado de detached HEAD, ele retornará uma string vazia.
@@ -483,12 +610,11 @@ export class GitService {
 	 * ```
 	 */
 	async getCurrentBranch(): Promise<string> {
-		return this.exec('git branch --show-current');
+		return this.runGit(['branch', '--show-current']);
 	}
 
 	/**
 	 * Obtém todas as referências disponíveis (branches + tags + commits recentes).
-	 * 
 	 * @return Lista de referências, incluindo branches locais, remotos, tags e commits recentes.
 	 * As referências são retornadas em ordem de prioridade: branches locais, branches remotos, tags e commits.
 	 * @remarks Este método combina a obtenção de branches locais e remotos, tags e commits recentes para fornecer
@@ -510,9 +636,9 @@ export class GitService {
 	 */
 	async getAllRefs(): Promise<string[]> {
 		const [branches, tags, commits] = await Promise.all([
-			this.exec('git for-each-ref --format="%(refname:short)" refs/heads/ refs/remotes/').catch(() => ''),
-			this.exec('git tag').catch(() => ''),
-			this.exec('git log --pretty=format:"%h" -n 20').catch(() => '')
+			this.runGit(['for-each-ref', '--format=%(refname:short)', 'refs/heads/', 'refs/remotes/']).catch(() => ''),
+			this.runGit(['tag']).catch(() => ''),
+			this.runGit(['log', '--pretty=format:%h', '-n', '20']).catch(() => '')
 		]);
 
 		const allRefs = [

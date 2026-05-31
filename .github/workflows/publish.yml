@@ -160,7 +160,6 @@ jobs:
 
       - name: Rodar testes
         run: xvfb-run -a npm test
-        continue-on-error: true # Continua mesmo se testes falharem
 
       - name: Instalar vsce
         run: npm install -g @vscode/vsce

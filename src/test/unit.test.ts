@@ -150,10 +150,10 @@ suite('Unit Test Suite', () => {
 
 	test('gitService exec privado deve cobrir sucesso e erro reais', async () => {
 		const service = new GitService('.') as any;
-		const version = await service.exec('git --version');
+		const version = await service.runGit(['--version']);
 		assert.ok(version.toLowerCase().includes('git version'));
 
-		await assert.rejects(async () => service.exec('git definitely-invalid-command-xyz'));
+		await assert.rejects(async () => service.runGit(['definitely-invalid-command-xyz']));
 	});
 
 	test('gitService parseCommitList deve ignorar linhas invalidas', () => {
@@ -164,22 +164,23 @@ suite('Unit Test Suite', () => {
 
 	test('gitService metodos publicos devem cobrir caminhos de sucesso/erro', async () => {
 		const service = new GitService('.') as any;
-		service.exec = async (command: string): Promise<string> => {
-			if (command.startsWith('git rev-parse')) return '.git';
-			if (command.startsWith('git branch -a')) return 'main|*|refs/heads/main\norigin/main||refs/remotes/origin/main';
-			if (command.startsWith('git log --pretty=format:"%h')) return 'a\x1faaaa\x1fmsg\x1fme\x1f2026-01-01';
-			if (command.startsWith('git log main')) return 'b\x1fbbbb\x1fmsg2\x1fyou\x1f2026-01-02';
-			if (command.startsWith('git diff --name-status a..b -- "f.ts"')) return 'M\tf.ts';
-			if (command.startsWith('git diff --name-status a..b')) return 'A\tnew.ts\nD\told.ts\nR100\ta.ts\tb.ts\nM\tm.ts';
-			if (command.startsWith('git show "a":"f.ts"')) return 'old';
-			if (command.startsWith('git show "b":"f.ts"')) return 'new';
-			if (command.startsWith('git diff a..b -- "f.ts"')) return '@@ -1,1 +1,1 @@\n-old\n+new\n';
-			if (command.startsWith('git diff a..b')) return 'raw-diff';
-			if (command.startsWith('git diff --stat a..b')) return ' 1 file changed, 2 insertions(+), 3 deletions(-)';
-			if (command.startsWith('git branch --show-current')) return 'main';
-			if (command.startsWith('git for-each-ref')) return 'main\norigin/main';
-			if (command === 'git tag') return 'v1.0.0';
-			if (command.startsWith('git log --pretty=format:"%h"')) return 'abc\ndef';
+		service.runGit = async (args: string[]): Promise<string> => {
+			const command = args.join(' ');
+			if (command === 'rev-parse --git-dir') return '.git';
+			if (command === 'branch -a --format=%(refname:short)|%(HEAD)|%(refname)') return 'main|*|refs/heads/main\norigin/main||refs/remotes/origin/main';
+			if (command === 'log --pretty=format:%h%x1f%H%x1f%s%x1f%an%x1f%ad --date=short -n 50') return 'a\x1faaaa\x1fmsg\x1fme\x1f2026-01-01';
+			if (command === 'log main --pretty=format:%h%x1f%H%x1f%s%x1f%an%x1f%ad --date=short -n 20') return 'b\x1fbbbb\x1fmsg2\x1fyou\x1f2026-01-02';
+			if (command === 'diff --name-status a..b -- f.ts') return 'M\tf.ts';
+			if (command === 'diff --name-status a..b') return 'A\tnew.ts\nD\told.ts\nR100\ta.ts\tb.ts\nM\tm.ts';
+			if (command === 'show a:f.ts') return 'old';
+			if (command === 'show b:f.ts') return 'new';
+			if (command === 'diff a..b -- f.ts') return '@@ -1,1 +1,1 @@\n-old\n+new\n';
+			if (command === 'diff a..b') return 'raw-diff';
+			if (command === 'diff --stat a..b') return ' 1 file changed, 2 insertions(+), 3 deletions(-)';
+			if (command === 'branch --show-current') return 'main';
+			if (command === 'for-each-ref --format=%(refname:short) refs/heads/ refs/remotes/') return 'main\norigin/main';
+			if (command === 'tag') return 'v1.0.0';
+			if (command === 'log --pretty=format:%h -n 20') return 'abc\ndef';
 			return '';
 		};
 
@@ -202,20 +203,21 @@ suite('Unit Test Suite', () => {
 
 	test('gitService deve cobrir caminhos de fallback/erro', async () => {
 		const service = new GitService('.') as any;
-		service.exec = async (command: string): Promise<string> => {
-			if (command.startsWith('git rev-parse')) {
+		service.runGit = async (args: string[]): Promise<string> => {
+			const command = args.join(' ');
+			if (command === 'rev-parse --git-dir') {
 				throw new Error('not git');
 			}
-			if (command.startsWith('git diff --stat')) {
+			if (command === 'diff --stat a..b') {
 				return 'no summary';
 			}
-			if (command.startsWith('git for-each-ref')) {
+			if (command === 'for-each-ref --format=%(refname:short) refs/heads/ refs/remotes/') {
 				throw new Error('x');
 			}
-			if (command === 'git tag') {
+			if (command === 'tag') {
 				throw new Error('x');
 			}
-			if (command.startsWith('git log --pretty=format:"%h"')) {
+			if (command === 'log --pretty=format:%h -n 20') {
 				throw new Error('x');
 			}
 			throw new Error('missing');
@@ -226,6 +228,16 @@ suite('Unit Test Suite', () => {
 		const stats = await service.getDiffStats('a', 'b');
 		assert.deepStrictEqual(stats, { files: 0, additions: 0, deletions: 0 });
 		assert.deepStrictEqual(await service.getAllRefs(), []);
+	});
+
+	test('gitService deve rejeitar entradas perigosas para refs, paths e limites', async () => {
+		const service = new GitService('.') as any;
+		service.runGit = async () => 'ok';
+
+		await assert.rejects(async () => service.getCommitsForRef('main;whoami', 10), /Referencia Git invalida/);
+		await assert.rejects(async () => service.getDiff('main', 'dev && calc'), /Referencia Git invalida/);
+		await assert.rejects(async () => service.getDiff('main', 'dev', '../secret.txt'), /Caminho de arquivo invalido/);
+		await assert.rejects(async () => service.getCommits(0), /Limite de commits invalido/);
 	});
 
 	test('sidebar provider deve cobrir fluxos principais', async () => {
@@ -380,13 +392,18 @@ suite('Unit Test Suite', () => {
 		let onViewChange: (() => void) | undefined;
 		let disposed = false;
 		let showedError = '';
+		let warningCount = 0;
 		let compareArgs: unknown[] = [];
 
 		const oldShowError = vscode.window.showErrorMessage;
+		const oldShowWarn = vscode.window.showWarningMessage;
 		const oldExecute = vscode.commands.executeCommand;
 
 		(vscode.window as any).showErrorMessage = (msg: string) => {
 			showedError = msg;
+		};
+		(vscode.window as any).showWarningMessage = () => {
+			warningCount++;
 		};
 		(vscode.commands as any).executeCommand = async (...args: unknown[]) => {
 			compareArgs = args;
@@ -432,6 +449,10 @@ suite('Unit Test Suite', () => {
 			assert.ok(fakeWebview.html.includes('error-state'));
 			webviewState.onMessage?.({ command: 'alert', text: 'x' });
 			assert.strictEqual(showedError, 'x');
+			webviewState.onMessage?.({ command: 'alert', text: 123 });
+			assert.strictEqual(warningCount > 0, true);
+			webviewState.onMessage?.({ command: 'compare', hash1: 'a;rm -rf', hash2: 'b' });
+			assert.strictEqual(warningCount > 1, true);
 			webviewState.onMessage?.({ command: 'compare', hash1: 'a', hash2: 'b' });
 			assert.strictEqual(compareArgs[0], 'vscode-ark-git-compare.compareCommits');
 
@@ -440,6 +461,7 @@ suite('Unit Test Suite', () => {
 			assert.strictEqual(disposed, true);
 		} finally {
 			(vscode.window as any).showErrorMessage = oldShowError;
+			(vscode.window as any).showWarningMessage = oldShowWarn;
 			(vscode.commands as any).executeCommand = oldExecute;
 		}
 	});
