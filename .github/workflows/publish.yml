@@ -161,11 +161,18 @@ jobs:
       - name: Rodar testes
         run: xvfb-run -a npm test
 
-      - name: Instalar vsce
-        run: npm install -g @vscode/vsce
-
       - name: Empacotar extensão (.vsix)
-        run: vsce package
+        run: npx --yes @vscode/vsce package --no-dependencies
+
+      - name: Resolver arquivo VSIX
+        run: |
+          set -eu
+          VSIX_FILE=$(ls -1 *.vsix | head -n 1)
+          if [ -z "$VSIX_FILE" ]; then
+            echo "Nenhum arquivo .vsix encontrado para publicação."
+            exit 1
+          fi
+          echo "VSIX_FILE=$VSIX_FILE" >> "$GITHUB_ENV"
 
       - name: Upload do artefato .vsix
         uses: actions/upload-artifact@v4
@@ -176,14 +183,12 @@ jobs:
       - name: Publicar no VS Code Marketplace
         env:
           VSCE_PAT: ${{ secrets.VSCE_PAT }}
-        run: vsce publish -p $VSCE_PAT
+        run: npx --yes @vscode/vsce publish --packagePath "$VSIX_FILE" --no-dependencies
 
       - name: Publicar no Open VSX Registry
         env:
           OVSX_PAT: ${{ secrets.OVSX_PAT }}
-        run: |
-          npm install -g ovsx
-          ovsx publish -p $OVSX_PAT
+        run: npx --yes ovsx publish "$VSIX_FILE"
 
       - name: Criar e enviar tag da versão
         env:

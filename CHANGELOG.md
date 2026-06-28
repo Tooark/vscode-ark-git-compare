@@ -2,6 +2,12 @@
 
 Resumo das principais mudanças por versão do projeto.
 
+## v1.0.6 - 2026-06-28
+
+- Atualização do `dompurify` para `3.4.11`, corrigindo três alertas de segurança do Dependabot (bypass de `SAFE_FOR_TEMPLATES`, persistência de Trusted Types após `clearConfig()` e poluição de `ALLOWED_ATTR` via `setConfig()`).
+- Atualização do `js-yaml` para corrigir DoS por complexidade quadrática em merge keys.
+- Workflow de publicação refatorado para empacotar uma única vez e publicar o mesmo `.vsix` no Marketplace e Open VSX, com uso de `npx` e `--no-dependencies`.
+
 ## v1.0.5 - 2026-05-31
 
 - Reforço de segurança na validação de refs Git, argumentos de comandos e mensagens recebidas do Webview.
