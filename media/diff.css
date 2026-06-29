@@ -159,6 +159,11 @@
 	display: block;
 }
 
+/* Carregamento sob demanda do diff de um arquivo */
+.file-diff-loading {
+	padding: 24px 16px;
+}
+
 .file-name {
 	margin: 0;
 	font-size: 14px;
@@ -470,7 +475,7 @@ body.has-fullscreen-file::after {
 	display: flex;
 	align-items: center;
 	gap: calc(var(--vscode-editor-font-size) * 0.5, 8px);
-	padding: 0 var(--vscode-editor-font-size) var(--vscode-editor-font-size) 0;
+	padding: var(--vscode-editor-font-size);
 	background: var(--vscode-sideBarSectionHeader-background, #2d2d2d);
 	border-bottom: 1px solid var(--vscode-panel-border, #444);
 	position: sticky;
@@ -488,6 +493,7 @@ body.has-fullscreen-file::after {
 	font-size: 13px;
 	font-family: inherit;
 	outline: none;
+  margin-right: 8px;
 }
 
 .file-search-input::placeholder {

@@ -6,7 +6,12 @@ src/**
 notes/**
 .gitignore
 .yarnrc
-webpack.config.js
+.npmrc
+pnpm-lock.yaml
+pnpm-workspace.yaml
+esbuild.mjs
+vitest.config.ts
+coverage/**
 vsc-extension-quickstart.md
 **/tsconfig.json
 **/eslint.config.mjs

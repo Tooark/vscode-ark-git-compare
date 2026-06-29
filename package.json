@@ -1,154 +1,154 @@
 {
-	"name": "git-compare",
-	"displayName": "%displayName%",
-	"description": "%description%",
-	"version": "1.0.6",
-	"publisher": "tooark",
-	"license": "MIT",
-	"tags": [
-		"git",
-		"compare",
-		"diff",
-		"commits",
-		"branches"
-	],
-	"keywords": [
-		"git",
-		"compare",
-		"diff",
-		"commits",
-		"branches"
-	],
-	"repository": {
-		"type": "git",
-		"url": "https://github.com/Tooark/vscode-ark-git-compare"
-	},
-	"homepage": "https://github.com/Tooark/vscode-ark-git-compare#readme",
-	"bugs": {
-		"url": "https://github.com/Tooark/vscode-ark-git-compare/issues"
-	},
-	"icon": "media/icon.png",
-	"galleryBanner": {
-		"color": "#1e1e1e",
-		"theme": "dark"
-	},
-	"engines": {
-		"vscode": "^1.95.0"
-	},
-	"categories": [
-		"Other",
-		"Visualization"
-	],
-	"main": "./dist/extension.js",
-	"contributes": {
-		"commands": [
-			{
-				"command": "vscode-ark-git-compare.compareCommits",
-				"title": "%commands.compareCommits.title%",
-				"category": "%commands.category%"
-			},
-			{
-				"command": "vscode-ark-git-compare.selectBranch",
-				"title": "%commands.selectBranch.title%",
-				"category": "%commands.category%"
-			},
-			{
-				"command": "vscode-ark-git-compare.selectCommitForBranch",
-				"title": "%commands.selectCommitForBranch.title%",
-				"category": "%commands.category%"
-			},
-			{
-				"command": "vscode-ark-git-compare.compareFromSidebar",
-				"title": "%commands.compareFromSidebar.title%",
-				"category": "%commands.category%",
-				"icon": "$(git-compare)"
-			},
-			{
-				"command": "vscode-ark-git-compare.refreshSidebar",
-				"title": "%commands.refreshSidebar.title%",
-				"category": "%commands.category%",
-				"icon": "$(refresh)"
-			}
-		],
-		"viewsContainers": {
-			"activitybar": [
-				{
-					"id": "gitCompareSidebar",
-					"title": "%viewsContainer.gitCompare.title%",
-					"icon": "media/git-compare.svg"
-				}
-			]
-		},
-		"views": {
-			"gitCompareSidebar": [
-				{
-					"id": "gitCompareView",
-					"name": "%views.gitCompare.name%",
-					"contextualTitle": "%views.gitCompare.contextualTitle%",
-					"icon": "media/git-compare.svg"
-				}
-			]
-		},
-		"menus": {
-			"view/title": [
-				{
-					"command": "vscode-ark-git-compare.compareFromSidebar",
-					"when": "view == gitCompareView",
-					"group": "navigation@1"
-				},
-				{
-					"command": "vscode-ark-git-compare.refreshSidebar",
-					"when": "view == gitCompareView",
-					"group": "navigation@2"
-				}
-			],
-			"commandPalette": [
-				{
-					"command": "vscode-ark-git-compare.selectBranch",
-					"when": "false"
-				},
-				{
-					"command": "vscode-ark-git-compare.selectCommitForBranch",
-					"when": "false"
-				}
-			]
-		}
-	},
-	"scripts": {
-		"vscode:prepublish": "npm run package",
-		"compile": "webpack",
-		"watch": "webpack --watch",
-		"package": "webpack --mode production --devtool hidden-source-map",
-		"compile-tests": "tsc -p . --outDir out",
-		"watch-tests": "tsc -p . -w --outDir out",
-		"pretest": "npm run compile-tests && npm run compile && npm run lint",
-		"lint": "eslint src",
-		"test": "vscode-test"
-	},
-	"dependencies": {
-		"diff": "^5.2.0"
-	},
-	"devDependencies": {
-		"@types/diff": "^5.2.0",
-		"@types/mocha": "^10.0.10",
-		"@types/node": "^20.19.39",
-		"@types/vscode": "^1.95.0",
-		"@typescript-eslint/eslint-plugin": "^8.31.1",
-		"@typescript-eslint/parser": "^8.31.1",
-		"@vscode/test-cli": "0.0.11",
-		"@vscode/test-electron": "^2.5.2",
-		"dompurify": "^3.4.11",
-		"eslint": "^9.25.1",
-		"ts-loader": "^9.5.2",
-		"typescript": "^5.8.3",
-		"webpack": "^5.99.7",
-		"webpack-cli": "^6.0.1"
-	},
-	"overrides": {
-		"fast-uri": "^3.1.2",
-		"serialize-javascript": "^7.0.5",
-		"mocha": {
-			"diff": "^8.0.3"
-		}
-	}
+  "name": "git-compare",
+  "displayName": "%displayName%",
+  "description": "%description%",
+  "version": "1.1.0",
+  "publisher": "tooark",
+  "license": "MIT",
+  "packageManager": "pnpm@11.5.3",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Tooark/vscode-ark-git-compare.git"
+  },
+  "homepage": "https://github.com/Tooark/vscode-ark-git-compare#readme",
+  "bugs": {
+    "url": "https://github.com/Tooark/vscode-ark-git-compare/issues"
+  },
+  "sponsor": {
+    "url": "https://github.com/sponsors/paulosfjunior"
+  },
+  "engines": {
+    "vscode": "^1.95.0"
+  },
+  "icon": "media/icon.png",
+  "categories": [
+    "Other",
+    "Visualization"
+  ],
+  "tags": [
+    "git",
+    "compare",
+    "diff",
+    "commits",
+    "branches",
+    "tooark"
+  ],
+  "keywords": [
+    "git",
+    "compare",
+    "diff",
+    "commits",
+    "branches",
+    "tooark"
+  ],
+  "galleryBanner": {
+    "color": "#1e1e1e",
+    "theme": "dark"
+  },
+  "main": "./dist/extension.js",
+  "l10n": "./l10n",
+  "contributes": {
+    "commands": [
+      {
+        "command": "vscode-ark-git-compare.compareCommits",
+        "title": "%commands.compareCommits.title%",
+        "category": "%commands.category%"
+      },
+      {
+        "command": "vscode-ark-git-compare.selectBranch",
+        "title": "%commands.selectBranch.title%",
+        "category": "%commands.category%"
+      },
+      {
+        "command": "vscode-ark-git-compare.selectCommitForBranch",
+        "title": "%commands.selectCommitForBranch.title%",
+        "category": "%commands.category%"
+      },
+      {
+        "command": "vscode-ark-git-compare.compareFromSidebar",
+        "title": "%commands.compareFromSidebar.title%",
+        "category": "%commands.category%",
+        "icon": "$(git-compare)"
+      },
+      {
+        "command": "vscode-ark-git-compare.refreshSidebar",
+        "title": "%commands.refreshSidebar.title%",
+        "category": "%commands.category%",
+        "icon": "$(refresh)"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "gitCompareSidebar",
+          "title": "%viewsContainer.gitCompare.title%",
+          "icon": "media/git-compare.svg"
+        }
+      ]
+    },
+    "views": {
+      "gitCompareSidebar": [
+        {
+          "id": "gitCompareView",
+          "name": "%views.gitCompare.name%",
+          "contextualTitle": "%views.gitCompare.contextualTitle%",
+          "icon": "media/git-compare.svg"
+        }
+      ]
+    },
+    "menus": {
+      "view/title": [
+        {
+          "command": "vscode-ark-git-compare.compareFromSidebar",
+          "when": "view == gitCompareView",
+          "group": "navigation@1"
+        },
+        {
+          "command": "vscode-ark-git-compare.refreshSidebar",
+          "when": "view == gitCompareView",
+          "group": "navigation@2"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "vscode-ark-git-compare.selectBranch",
+          "when": "false"
+        },
+        {
+          "command": "vscode-ark-git-compare.selectCommitForBranch",
+          "when": "false"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "pnpm run package",
+    "compile": "node esbuild.mjs",
+    "watch": "node esbuild.mjs --watch",
+    "package": "node esbuild.mjs --production",
+    "compile-tests": "tsc -p . --outDir out",
+    "watch-tests": "tsc -p . -w --outDir out",
+    "pretest": "pnpm run compile-tests && pnpm run compile && pnpm run lint",
+    "lint": "eslint src",
+    "test:unit": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "vscode-test",
+    "test": "vitest run && vscode-test",
+    "coverage": "vitest run --coverage"
+  },
+  "devDependencies": {
+    "@types/mocha": "^10.0.10",
+    "@types/node": "^20.19.39",
+    "@types/vscode": "^1.95.0",
+    "@typescript-eslint/eslint-plugin": "^8.31.1",
+    "@typescript-eslint/parser": "^8.31.1",
+    "@vitest/coverage-v8": "^4.1.9",
+    "@vscode/test-cli": "0.0.11",
+    "@vscode/test-electron": "^2.5.2",
+    "dompurify": "^3.4.11",
+    "esbuild": "^0.28.1",
+    "eslint": "^9.25.1",
+    "typescript": "^5.8.3",
+    "vitest": "^4.1.9"
+  }
 }

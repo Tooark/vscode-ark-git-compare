@@ -197,6 +197,123 @@ window.addEventListener('DOMContentLoaded', function () {
 	ScrollSync.init();
 });
 
+/**
+ * Cria o elemento de carregamento exibido enquanto o diff de um arquivo é calculado sob demanda.
+ * @returns {HTMLElement}
+ */
+function buildInlineSpinner () {
+	const wrap = document.createElement('div');
+	wrap.className = 'loading-state file-diff-loading';
+
+	const spinner = document.createElement('div');
+	spinner.className = 'loading-spinner';
+
+	const label = document.createElement('p');
+	label.textContent = i18n.loadingDiff || 'Loading differences...';
+
+	wrap.appendChild(spinner);
+	wrap.appendChild(label);
+	return wrap;
+}
+
+/**
+ * Localiza o elemento .file-diff correspondente a um caminho de arquivo.
+ * Evita seletores CSS para não precisar escapar caracteres especiais do caminho.
+ * @param {string} file Caminho do arquivo
+ * @returns {Element | null}
+ */
+function findFileDiffByPath (file) {
+	const all = document.querySelectorAll('.file-diff');
+	for (const el of all) {
+		if (el.getAttribute('data-file') === file) {
+			return el;
+		}
+	}
+	return null;
+}
+
+/**
+ * Exibe o spinner de carregamento dentro de um arquivo, caso ele ainda não tenha conteúdo.
+ * Usado quando o usuário expande um arquivo que ainda está sendo carregado.
+ * @param {Element} content Elemento .file-content do arquivo
+ */
+function showSpinnerIfEmpty (content) {
+	if (!content.querySelector('.code-compare')) {
+		content.replaceChildren(buildInlineSpinner());
+	}
+}
+
+/**
+ * Gerencia o carregamento dos diffs por arquivo: pré-carrega em background (com limite de
+ * concorrência, cedendo tempo ao usuário via requestIdleCallback) e atende pedidos sob demanda
+ * com prioridade quando o usuário expande um arquivo ainda não carregado.
+ */
+const LazyLoader = {
+	/** Máximo de requisições simultâneas à extensão. */
+	maxConcurrent: 3,
+
+	/** Quantidade de requisições atualmente em andamento. */
+	inFlight: 0,
+
+	/** Fila de elementos .file-diff aguardando pré-carregamento. */
+	queue: /** @type {Element[]} */ ([]),
+
+	/**
+	 * (Re)inicia o pré-carregamento em background de todos os arquivos ainda não carregados.
+	 * Deve ser chamado a cada nova comparação.
+	 */
+	startPrefetch () {
+		this.inFlight = 0;
+		this.queue = Array.from(document.querySelectorAll('.file-diff[data-loaded="false"]'));
+		this.pump();
+	},
+
+	/**
+	 * Dispara novas requisições respeitando o limite de concorrência, agendadas em tempo ocioso
+	 * para não competir com a interação do usuário.
+	 */
+	pump () {
+		const schedule = /** @type {(cb: () => void) => void} */ (
+			/** @type {any} */ (globalThis).requestIdleCallback || ((cb) => globalThis.setTimeout(cb, 50))
+		);
+
+		schedule(() => {
+			while (this.inFlight < this.maxConcurrent && this.queue.length > 0) {
+				const fileDiff = this.queue.shift();
+				if (fileDiff) {
+					this.dispatch(fileDiff);
+				}
+			}
+		});
+	},
+
+	/**
+	 * Solicita o diff de um arquivo à extensão (uma única vez por arquivo).
+	 * @param {Element} fileDiff Elemento .file-diff do arquivo
+	 * @returns {boolean} true se a requisição foi enviada; false se já estava carregado/carregando.
+	 */
+	dispatch (fileDiff) {
+		if (fileDiff.getAttribute('data-loaded') !== 'false') {
+			return false;
+		}
+
+		fileDiff.setAttribute('data-loaded', 'loading');
+		this.inFlight++;
+		vscode.postMessage({ command: 'requestFileDiff', file: fileDiff.getAttribute('data-file') });
+		return true;
+	},
+
+	/**
+	 * Marca a conclusão de uma requisição (sucesso ou erro) e retoma a fila de pré-carregamento.
+	 */
+	onSettled () {
+		if (this.inFlight > 0) {
+			this.inFlight--;
+		}
+		this.pump();
+	}
+};
+
 // Toggle collapse/expand por arquivo
 document.addEventListener('click', function (e) {
 	const btn = e.target instanceof Element ? e.target.closest('.file-toggle') : null;
@@ -221,8 +338,18 @@ document.addEventListener('click', function (e) {
 		content.classList.add('expanded');
 		btn.setAttribute('aria-expanded', 'true');
 		btn.textContent = '▾';
-		// re-sincroniza scrolling caso tenha sido adicionado novo conteúdo
-		setTimeout(() => ScrollSync.syncFileDiffPairs(), 50);
+
+		// Carrega o conteúdo conforme o estado: ainda não pedido -> dispara com prioridade;
+		// já em carregamento (via prefetch) -> mostra spinner; já carregado -> apenas re-sincroniza.
+		const state = fileDiff.getAttribute('data-loaded');
+		if (state === 'false') {
+			showSpinnerIfEmpty(content);
+			LazyLoader.dispatch(fileDiff);
+		} else if (state === 'loading') {
+			showSpinnerIfEmpty(content);
+		} else {
+			setTimeout(() => ScrollSync.syncFileDiffPairs(), 50);
+		}
 	}
 });
 
@@ -319,6 +446,34 @@ window.addEventListener('message', function (e) {
 		}
 	}
 
+	if (message.command === 'fileDiffResult') {
+		const fileDiff = findFileDiffByPath(message.file);
+
+		// Ignora resultados obsoletos (ex.: de uma comparação anterior já substituída no DOM):
+		// só aplica quando o arquivo está de fato aguardando este carregamento.
+		if (!fileDiff || fileDiff.getAttribute('data-loaded') !== 'loading') {
+			return;
+		}
+
+		const content = fileDiff.querySelector('.file-content');
+		if (content) {
+			content.replaceChildren(sanitizeHtml(message.html));
+			fileDiff.setAttribute('data-loaded', 'true');
+
+			// Sincroniza o scroll apenas para o par recém-inserido deste arquivo.
+			setTimeout(() => {
+				const scrollables = /** @type {NodeListOf<HTMLElement>} */ (content.querySelectorAll('.sync-scroll'));
+				if (scrollables.length >= 2) {
+					ScrollSync.createSyncPair(scrollables[0], scrollables[1]);
+				}
+			}, 50);
+		}
+
+		// Libera uma vaga de concorrência e retoma o pré-carregamento da fila.
+		LazyLoader.onSettled();
+		return;
+	}
+
 	if (message.command === 'showResult') {
 		const resultDiv = document.getElementById('git-diff-result');
 
@@ -331,6 +486,9 @@ window.addEventListener('message', function (e) {
 				ScrollSync.syncFileDiffPairs();
 				ScrollSync.syncHorizontalScroll();
 				FileSearch.init();
+				// Inicia o pré-carregamento dos diffs em background, para que ao expandir um
+				// arquivo o conteúdo já esteja pronto (ou seja carregado sob demanda, se ainda não).
+				LazyLoader.startPrefetch();
 			}, 100);
 		}
 	}
@@ -449,6 +607,25 @@ const FileSearch = {
 			document.body.classList.add('has-fullscreen-file');
 			btn.setAttribute('aria-expanded', 'true');
 			btn.title = i18n.fullscreenExit || 'Exit fullscreen (ESC)';
+
+			// Garante que o conteúdo esteja expandido e carregado sob demanda ao entrar em tela cheia.
+			const content = fileDiff.querySelector('.file-content');
+			const toggle = /** @type {HTMLElement} */ (fileDiff.querySelector('.file-toggle'));
+			if (content) {
+				content.classList.remove('collapsed');
+				content.classList.add('expanded');
+			}
+			if (toggle) {
+				toggle.setAttribute('aria-expanded', 'true');
+				toggle.textContent = '▾';
+			}
+			const fsState = fileDiff.getAttribute('data-loaded');
+			if (content && fsState === 'false') {
+				showSpinnerIfEmpty(content);
+				LazyLoader.dispatch(fileDiff);
+			} else if (content && fsState === 'loading') {
+				showSpinnerIfEmpty(content);
+			}
 
 			// Re-sincroniza scroll em tela cheia
 			setTimeout(() => {

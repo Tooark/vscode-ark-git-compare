@@ -1,66 +1,105 @@
-# Git Compare
+# Ark Git Compare
 
-Extensão para o Visual Studio Code que permite comparar branches e commits do Git com visualização lado a lado, destacando diferenças inline no nível de caractere.
+Visual Studio Code extension to compare Git branches and commits with a side-by-side view, highlighting inline differences at the character level.
 
-## Demonstração
+🇺🇸 **English** · [🇧🇷 Português (Brasil)](https://github.com/Tooark/vscode-ark-git-compare/blob/main/README.pt-BR.md)
 
-### Comparar commits
+---
 
-![Comparar commits](https://raw.githubusercontent.com/Tooark/vscode-ark-git-compare/main/media/compare.gif)
+## 🎬 Preview
 
-### Expandir em tela cheia
+### Compare commits
 
-![Modo tela cheia](https://raw.githubusercontent.com/Tooark/vscode-ark-git-compare/main/media/full-screen.gif)
+![Compare commits](https://raw.githubusercontent.com/Tooark/vscode-ark-git-compare/main/media/compare.gif)
 
-### Busca de arquivos
+### Expand to fullscreen
 
-![Busca de arquivos](https://raw.githubusercontent.com/Tooark/vscode-ark-git-compare/main/media/search.gif)
+![Fullscreen mode](https://raw.githubusercontent.com/Tooark/vscode-ark-git-compare/main/media/full-screen.gif)
 
-## Funcionalidades
+### File search
 
-### Painel lateral (Sidebar)
+![File search](https://raw.githubusercontent.com/Tooark/vscode-ark-git-compare/main/media/search.gif)
 
-A extensão adiciona um painel dedicado na barra de atividade do VS Code com a visualização **Comparar Branches**:
+---
 
-- Selecione dois branches para comparação via campos **Branch 1** e **Branch 2**
-- Veja os últimos 20 commits de cada branch listados no painel
-- Selecione um commit específico por branch para comparação pontual
-- Botão **Comparar** na barra do painel para executar a comparação
+## ✨ Overview
 
-### Visualização de diff
+- 🌿 **Compare any two refs** — branches or commits — with a side-by-side diff
+- 🔤 **Inline highlighting** of character-level changes inside modified lines
+- 🧭 **Dedicated sidebar** to pick branches and commits without leaving the editor
+- ⚡ **Instant file list with on-demand diffs** — files load lazily and prefetch in the background, so even huge comparisons open without freezing
+- 🌐 **Internationalization** with English and Brazilian Portuguese
 
-- **Comparação lado a lado** dos arquivos alterados entre dois refs (branches ou commits)
-- **Destaque inline** de mudanças no nível de caractere dentro das linhas modificadas
-- **Sincronização de scroll** entre as colunas esquerda e direita
-- **Modo fullscreen** por arquivo — clique no botão de expandir ou pressione `ESC` para sair
-- Selects no topo do painel sincronizados com a seleção feita na sidebar
+---
 
-### Comando na paleta
+## 🧩 Features
 
-- **Git Compare: Comparar Commits** — abre o painel de comparação direto pela paleta de comandos
+### Sidebar
 
-## Requisitos
+The extension adds a dedicated **Compare Branches** view to the VS Code activity bar:
+
+- Select two refs through the **Branch 1** and **Branch 2** fields
+- Browse the latest 20 commits of each branch listed in the panel
+- Pick a specific commit per branch for a point-in-time comparison
+- **Compare** button in the panel toolbar to run the comparison
+
+### Diff view
+
+- **Side-by-side comparison** of the files changed between two refs
+- **Inline highlighting** of character-level changes within modified lines
+- **Scroll synchronization** between the left and right columns
+- **Per-file fullscreen mode** — click the expand button or press `ESC` to exit
+- Selects at the top of the panel stay in sync with the sidebar selection
+- **On-demand rendering** — files start collapsed and each diff loads when expanded, with background prefetching so they are usually ready by the time you open them
+
+### Command palette
+
+- **Git Compare: Compare Commits** — opens the comparison panel directly from the command palette
+
+---
+
+## ✅ Requirements
 
 - Visual Studio Code `^1.95.0`
-- Repositório Git no workspace aberto
+- An open workspace containing a Git repository
 
-## Como usar
+---
 
-1. Abra um workspace com um repositório Git
-2. Clique no ícone **Git Compare** na barra de atividade lateral
-3. No painel, clique em **Branch 1** ou **Branch 2** para selecionar os branches desejados
-4. (Opcional) Expanda o grupo de commits de cada branch e clique em um commit para selecionar um ponto específico
-5. Clique no botão **Comparar** na barra do painel (ícone de comparação) para visualizar as diferenças
+## 🚀 Usage
 
-## Observações e limitações
+1. Open a workspace with a Git repository
+2. Click the **Git Compare** icon in the activity bar
+3. In the panel, click **Branch 1** or **Branch 2** to select the desired refs
+4. (Optional) Expand each branch's commit group and click a commit to pin a specific point
+5. Click the **Compare** button in the panel toolbar (compare icon) to view the differences
 
-- Requer um workspace com repositório Git válido na raiz.
-- Listagens de commits podem demorar em repositórios com histórico muito extenso.
+---
 
-## Configurações
+## ⚠️ Notes and limitations
 
-A extensão não expõe configurações de usuário atualmente; se futuras features precisarem de preferências (por exemplo, número de commits listados ou comportamento de sincronização), elas serão adicionadas aqui.
+- Requires a valid Git repository at the workspace root.
+- Listing commits may be slow in repositories with very large histories.
 
-## Licença
+---
 
-Este projeto está licenciado sob a [MIT License](LICENSE).
+## ⚙️ Settings
+
+The extension does not expose user settings at the moment. If future features require preferences (for example, the number of listed commits or scroll-sync behavior), they will be documented here.
+
+---
+
+## 💖 Support
+
+If this extension helps your workflow, consider supporting its development:
+
+- 💙 [GitHub Sponsors](https://github.com/sponsors/paulosfjunior)
+- ☕ [Ko-fi](https://ko-fi.com/paulosfjunior)
+- 💸 [PayPal](https://www.paypal.com/donate/?business=62KETU4PXBWZC&no_recurring=0&item_name=Ol%C3%A1%21+Sou+o+fundador+e+mantenedor+da+Tooark+%28tooark.com%29+%E2%80%94%0Aum+ecossistema+de+projetos+open+source.%0AObrigado+pelo+apoio%21+%F0%9F%92%9A&currency_code=BRL)
+
+Every contribution helps keep the project maintained and improving. Thank you! 🙏
+
+---
+
+## 📝 License
+
+This project is licensed under the [MIT License](LICENSE).

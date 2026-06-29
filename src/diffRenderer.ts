@@ -1,6 +1,6 @@
-import * as Diff from 'diff';
+import * as vscode from 'vscode';
+import * as Diff from './diff';
 import { GitService } from './gitService';
-import { t } from './i18n';
 import { escapeHtml } from './utils';
 
 /**
@@ -36,8 +36,7 @@ export class HashInfo {
 }
 
 /**
- * Constrói o HTML para uma linha de diferença, destacando as partes adicionadas e removidas.
- * 
+ * Função que constrói o HTML para uma linha de diferença, destacando as partes adicionadas e removidas.
  * @param oldLine A linha original (removida).
  * @param newLine A linha modificada (adicionada).
  * @returns Um objeto contendo o HTML para a linha antiga (com partes removidas destacadas) e a linha nova (com partes adicionadas destacadas).
@@ -66,8 +65,7 @@ function buildInlineChangedPair(oldLine: string, newLine: string): { left: strin
 }
 
 /**
- * Constrói o HTML para a comparação lado a lado entre dois conteúdos de arquivo, utilizando as linhas de diferença para destacar as mudanças.
- * 
+ * Função que constrói o HTML para a comparação lado a lado entre dois conteúdos de arquivo, utilizando as linhas de diferença para destacar as mudanças. 
  * @param compare O objeto HashInfo contendo os conteúdos dos arquivos e as linhas de diferença.
  * @returns Um objeto contendo o HTML para as linhas do arquivo antigo (hash1) e do arquivo novo (hash2), com as diferenças destacadas.
  */
@@ -196,61 +194,176 @@ export function buildSideBySideDiff(compare: HashInfo): { leftLines: string; rig
 }
 
 /**
- * Renderiza o HTML para a comparação de um arquivo específico, utilizando as informações de comparação contidas no objeto HashInfo.
- * 
- * @param compare O objeto HashInfo contendo as informações de comparação para o arquivo, incluindo o nome do arquivo, status da comparação,
- * nomes dos hashes comparados, conteúdos dos arquivos e as linhas de diferença.
- * @returns O HTML gerado para a comparação do arquivo.
+ * Função que retorna o rótulo localizado para um status de arquivo.
+ * @param status O status da comparação ('added', 'deleted', 'modified', 'renamed' ou 'error').
+ * @returns O rótulo traduzido correspondente ao status.
  */
-export function renderFileDiff(compare: HashInfo) {
-	const statusClass = compare.status;
-	const statusLabel = {
-		'added': t('webview.statusAdded'),
-		'deleted': t('webview.statusDeleted'),
-		'modified': t('webview.statusModified'),
-		'renamed': t('webview.statusRenamed'),
-		'error': t('webview.statusError')
-	}[compare.status] || t('webview.statusModified');
+function statusLabelFor(status: string): string {
+	return {
+		'added': vscode.l10n.t('Added'),
+		'deleted': vscode.l10n.t('Removed'),
+		'modified': vscode.l10n.t('Modified'),
+		'renamed': vscode.l10n.t('Renamed'),
+		'error': vscode.l10n.t('Error')
+	}[status] || vscode.l10n.t('Modified');
+}
 
+/**
+ * Função que constrói o corpo (comparação lado a lado) do diff de um arquivo, sem o cabeçalho.
+ * É usado tanto na renderização completa quanto na renderização sob demanda de um único arquivo.
+ * @param compare O objeto HashInfo contendo os conteúdos e as linhas de diferença.
+ * @returns O HTML do bloco `.code-compare` com as duas colunas sincronizáveis.
+ */
+export function renderDiffBody(compare: HashInfo): string {
 	const { leftLines, rightLines } = buildSideBySideDiff(compare);
 
 	return `
-		<div class="file-diff" data-file="${escapeHtml(compare.file)}">
-			<div class="file-diff-header">
-				<h3 class="file-name">📄 ${escapeHtml(compare.file)}</h3>
-				<div class="file-actions">
-				<button class="file-toggle" aria-expanded="true" title="${t('webview.toggleTitle')}">▾</button>
-				<span class="file-status ${statusClass}">${statusLabel}</span>
-				<button class="file-fullscreen" aria-expanded="false" title="${t('webview.fullscreenEnter')}">⛶</button>
-				</div>
+		<div class="code-compare">
+			<div class="code-space">
+				<div class="code-space-header">${escapeHtml(compare.hash1_name)}</div>
+				<pre class="sync-scroll hash1">${leftLines}</pre>
 			</div>
-			<div class="file-content expanded">
-				<div class="code-compare">
-					<div class="code-space">
-						<div class="code-space-header">${escapeHtml(compare.hash1_name)}</div>
-						<pre class="sync-scroll hash1">${leftLines}</pre>
-					</div>
-					<div class="code-space">
-						<div class="code-space-header">${escapeHtml(compare.hash2_name)}</div>
-						<pre class="sync-scroll hash2">${rightLines}</pre>
-					</div>
-				</div>
+			<div class="code-space">
+				<div class="code-space-header">${escapeHtml(compare.hash2_name)}</div>
+				<pre class="sync-scroll hash2">${rightLines}</pre>
 			</div>
 		</div>
 	`;
 }
 
 /**
- * Renderiza o HTML para a comparação de um conjunto de arquivos, utilizando as informações de comparação contidas nos objetos HashInfo.
- * 
+ * Função que renderiza o HTML para a comparação de um arquivo específico, utilizando as informações de comparação contidas no objeto HashInfo.
+ * @param compare O objeto HashInfo contendo as informações de comparação para o arquivo, incluindo o nome do arquivo, status da comparação,
+ * nomes dos hashes comparados, conteúdos dos arquivos e as linhas de diferença.
+ * @returns O HTML gerado para a comparação do arquivo.
+ */
+export function renderFileDiff(compare: HashInfo) {
+	const statusClass = compare.status;
+	const statusLabel = statusLabelFor(compare.status);
+
+	return `
+		<div class="file-diff" data-file="${escapeHtml(compare.file)}" data-loaded="true">
+			<div class="file-diff-header">
+				<h3 class="file-name">📄 ${escapeHtml(compare.file)}</h3>
+				<div class="file-actions">
+				<button class="file-toggle" aria-expanded="true" title="${vscode.l10n.t('Collapse/Expand')}">▾</button>
+				<span class="file-status ${statusClass}">${statusLabel}</span>
+				<button class="file-fullscreen" aria-expanded="false" title="${vscode.l10n.t('Expand to fullscreen')}">⛶</button>
+				</div>
+			</div>
+			<div class="file-content expanded">
+				${renderDiffBody(compare)}
+			</div>
+		</div>
+	`;
+}
+
+/**
+ * Função que renderiza o "shell" (casca) colapsado de um arquivo: apenas o cabeçalho com nome e status,
+ * sem o conteúdo do diff. O conteúdo é carregado sob demanda quando o usuário expande o arquivo
+ * (ver `renderSingleFileDiff`), evitando montar e sanitizar todo o diff de uma vez.
+ * @param file O caminho do arquivo.
+ * @param status O status da comparação ('added', 'deleted', 'modified', 'renamed').
+ * @returns O HTML do arquivo colapsado, pronto para carregar o conteúdo sob demanda.
+ */
+export function renderFileShell(file: string, status: string): string {
+	const statusLabel = statusLabelFor(status);
+
+	return `
+		<div class="file-diff" data-file="${escapeHtml(file)}" data-loaded="false">
+			<div class="file-diff-header">
+				<h3 class="file-name">📄 ${escapeHtml(file)}</h3>
+				<div class="file-actions">
+				<button class="file-toggle" aria-expanded="false" title="${vscode.l10n.t('Collapse/Expand')}">▸</button>
+				<span class="file-status ${status}">${statusLabel}</span>
+				<button class="file-fullscreen" aria-expanded="false" title="${vscode.l10n.t('Expand to fullscreen')}">⛶</button>
+				</div>
+			</div>
+			<div class="file-content collapsed"></div>
+		</div>
+	`;
+}
+
+/**
+ * Função que renderiza a lista de "shells" colapsados para todos os arquivos alterados.
+ * A renderização inicial é praticamente instantânea, pois nenhum conteúdo de diff é calculado aqui.
+ * @param files A lista de arquivos com seus respectivos status.
+ * @returns O HTML concatenado dos cabeçalhos colapsados de todos os arquivos.
+ */
+export function renderShellsHtml(files: { file: string; status: string }[]): string {
+	return [...files]
+		.sort((a, b) => a.file.localeCompare(b.file))
+		.map(f => renderFileShell(f.file, f.status))
+		.join('');
+}
+
+/**
+ * Função que calcula e renderiza, sob demanda, o corpo do diff de um único arquivo.
+ * Usado quando o usuário expande um arquivo no webview, mantendo o custo de cálculo
+ * e sanitização limitado a um arquivo por vez.
+ * @param gitService O serviço Git utilizado para obter o conteúdo do arquivo.
+ * @param file O caminho do arquivo a ser comparado.
+ * @param hash1 O hash do primeiro branch ou commit.
+ * @param hash2 O hash do segundo branch ou commit.
+ * @returns O HTML do bloco `.code-compare` para o arquivo.
+ */
+export async function renderSingleFileDiff(
+	gitService: GitService,
+	file: string,
+	hash1: string,
+	hash2: string
+): Promise<string> {
+	try {
+		const [content1, content2] = await Promise.all([
+			gitService.getFileContent(hash1, file),
+			gitService.getFileContent(hash2, file)
+		]);
+
+		const diffLines = Diff.diffLines(content1 || '', content2 || '');
+
+		let status = 'modified';
+
+		// Verifica o status do arquivo com base na presença ou ausência de conteúdo em cada hash
+		if (!content1 && content2) {
+			status = 'added';
+		} else if (content1 && !content2) {
+			status = 'deleted';
+		}
+
+		const info = new HashInfo(
+			file,
+			status,
+			hash1,
+			hash2,
+			content1 || vscode.l10n.t('[File does not exist]'),
+			content2 || vscode.l10n.t('[File does not exist]'),
+			diffLines
+		);
+
+		return renderDiffBody(info);
+	} catch (error) {
+		return `<div class="error-state"><p>${vscode.l10n.t('[Load error]')}</p></div>`;
+	}
+}
+
+/**
+ * Função que renderiza o HTML para a comparação de um conjunto de arquivos, utilizando as informações de comparação contidas nos objetos HashInfo. 
  * @param gitService O serviço Git utilizado para obter o conteúdo dos arquivos comparados.
  * @param files A lista de arquivos a serem comparados.
  * @param hash1 O hash do primeiro branch ou commit a ser comparado.
  * @param hash2 O hash do segundo branch ou commit a ser comparado.
  * @param statsHtml O HTML contendo as estatísticas da comparação (número de arquivos alterados, adições, deleções, etc.) a ser incluído no início do resultado.
+ * @param onProgress Callback opcional invocado ao final de cada lote com a quantidade de arquivos já processados e o total, permitindo exibir uma barra de progresso determinada.
  * @returns O HTML gerado para a comparação dos arquivos, incluindo as estatísticas e as comparações lado a lado para cada arquivo.
  */
-export async function renderDiffHtml(gitService: GitService, files: string[], hash1: string, hash2: string, statsHtml: string): Promise<string> {
+export async function renderDiffHtml(
+	gitService: GitService,
+	files: string[],
+	hash1: string,
+	hash2: string,
+	statsHtml: string,
+	onProgress?: (processed: number, total: number) => void
+): Promise<string> {
 	// Se o serviço Git não estiver disponível, retorna apenas o HTML das estatísticas sem as comparações dos arquivos
 	if (!gitService) {
 		return statsHtml + '';
@@ -286,8 +399,8 @@ export async function renderDiffHtml(gitService: GitService, files: string[], ha
 					status,
 					hash1,
 					hash2,
-					content1 || t('webview.fileMissing'),
-					content2 || t('webview.fileMissing'),
+					content1 || vscode.l10n.t('[File does not exist]'),
+					content2 || vscode.l10n.t('[File does not exist]'),
 					diffLines
 				));
 			} catch (error) {
@@ -296,12 +409,15 @@ export async function renderDiffHtml(gitService: GitService, files: string[], ha
 					'error',
 					hash1,
 					hash2,
-					t('webview.loadError'),
-					t('webview.loadError'),
+					vscode.l10n.t('[Load error]'),
+					vscode.l10n.t('[Load error]'),
 					[]
 				));
 			}
 		}));
+
+		// Reporta o progresso ao final de cada lote (limitado ao total de arquivos).
+		onProgress?.(Math.min(i + batchSize, files.length), files.length);
 	}
 
 	results.sort((a, b) => a.file.localeCompare(b.file));

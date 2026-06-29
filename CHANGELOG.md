@@ -2,6 +2,16 @@
 
 Resumo das principais mudanças por versão do projeto.
 
+## v1.1.0 - 2026-06-29
+
+- Renderização sob demanda: a lista de arquivos aparece instantaneamente (colapsada) e o diff de cada arquivo é carregado ao expandir, com pré-carregamento em segundo plano (concorrência limitada), eliminando o congelamento em comparações grandes.
+- Correção do bug em que o resultado da comparação era descartado ao trocar de aba e voltar ao painel, agora preservado com `retainContextWhenHidden` e sem reconstrução do HTML ao reexibir.
+- Migração da internacionalização para a API oficial `vscode.l10n`, com bundles em `l10n/` (en e pt-br) e campo `l10n` no manifesto, no lugar da solução de i18n própria.
+- Remoção da dependência de runtime `diff`, substituída por implementação pura baseada no algoritmo de Myers; a extensão segue sem dependências de runtime.
+- Bundler migrado de `webpack` para `esbuild`; gerenciador de pacotes migrado de `npm` para `pnpm`, com ajuste do workflow de publicação.
+- Testes reorganizados em modelo híbrido: `Vitest` para a lógica pura e `@vscode/test-cli` para os testes que dependem do host do VS Code.
+- README em inglês como principal com versão em português (`README.pt-BR.md`), e adição de opções de apoio (campo `sponsor` no manifesto e `.github/FUNDING.yml`).
+
 ## v1.0.6 - 2026-06-28
 
 - Atualização do `dompurify` para `3.4.11`, corrigindo três alertas de segurança do Dependabot (bypass de `SAFE_FOR_TEMPLATES`, persistência de Trusted Types após `clearConfig()` e poluição de `ALLOWED_ATTR` via `setConfig()`).
