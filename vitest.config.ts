@@ -11,6 +11,9 @@ export default defineConfig({
     ]
   },
   test: {
-    include: ['src/test/**/*.test.ts']
+    // Apenas os testes de lógica pura (Vitest). Os testes de host em
+    // src/test/*.test.ts usam a API do Mocha (suite/test) e rodam via
+    // vscode-test — ver .vscode-test.mjs.
+    include: ['src/test/unit/**/*.test.ts']
   }
 });

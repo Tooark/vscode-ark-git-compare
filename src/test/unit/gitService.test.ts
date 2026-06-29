@@ -51,18 +51,18 @@ describe('gitService.ts', () => {
 	test('metodos publicos devem cobrir caminhos de sucesso', async () => {
 		const service = stubbedService(async (args) => {
 			const command = args.join(' ');
-			if (command === 'rev-parse --git-dir') return '.git';
-			if (command === 'branch -a --format=%(refname:short)|%(HEAD)|%(refname)') return 'main|*|refs/heads/main\norigin/main||refs/remotes/origin/main';
-			if (command === 'log --pretty=format:%h%x1f%H%x1f%s%x1f%an%x1f%ad --date=short -n 50') return 'a\x1faaaa\x1fmsg\x1fme\x1f2026-01-01';
-			if (command === 'log main --pretty=format:%h%x1f%H%x1f%s%x1f%an%x1f%ad --date=short -n 20') return 'b\x1fbbbb\x1fmsg2\x1fyou\x1f2026-01-02';
-			if (command === 'diff --name-status a..b') return 'A\tnew.ts\nD\told.ts\nR100\ta.ts\tb.ts\nM\tm.ts';
-			if (command === 'show a:f.ts') return 'old';
-			if (command === 'diff a..b') return 'raw-diff';
-			if (command === 'diff --stat a..b') return ' 1 file changed, 2 insertions(+), 3 deletions(-)';
-			if (command === 'branch --show-current') return 'main';
-			if (command === 'for-each-ref --format=%(refname:short) refs/heads/ refs/remotes/') return 'main\norigin/main';
-			if (command === 'tag') return 'v1.0.0';
-			if (command === 'log --pretty=format:%h -n 20') return 'abc\ndef';
+			if (command === 'rev-parse --git-dir') {return '.git';}
+			if (command === 'branch -a --format=%(refname:short)|%(HEAD)|%(refname)') {return 'main|*|refs/heads/main\norigin/main||refs/remotes/origin/main';}
+			if (command === 'log --pretty=format:%h%x1f%H%x1f%s%x1f%an%x1f%ad --date=short -n 50') {return 'a\x1faaaa\x1fmsg\x1fme\x1f2026-01-01';}
+			if (command === 'log main --pretty=format:%h%x1f%H%x1f%s%x1f%an%x1f%ad --date=short -n 20') {return 'b\x1fbbbb\x1fmsg2\x1fyou\x1f2026-01-02';}
+			if (command === 'diff --name-status a..b') {return 'A\tnew.ts\nD\told.ts\nR100\ta.ts\tb.ts\nM\tm.ts';}
+			if (command === 'show a:f.ts') {return 'old';}
+			if (command === 'diff a..b') {return 'raw-diff';}
+			if (command === 'diff --stat a..b') {return ' 1 file changed, 2 insertions(+), 3 deletions(-)';}
+			if (command === 'branch --show-current') {return 'main';}
+			if (command === 'for-each-ref --format=%(refname:short) refs/heads/ refs/remotes/') {return 'main\norigin/main';}
+			if (command === 'tag') {return 'v1.0.0';}
+			if (command === 'log --pretty=format:%h -n 20') {return 'abc\ndef';}
 			return '';
 		});
 
@@ -100,9 +100,9 @@ describe('gitService.ts', () => {
 		for (const [code, expected] of cases) {
 			const service = stubbedService(async (args) => {
 				const command = args.join(' ');
-				if (command.startsWith('diff --name-status')) return code ? `${code}\tf.ts` : '';
-				if (command.startsWith('show')) return 'conteudo';
-				if (command.startsWith('diff')) return '@@ -1,1 +1,1 @@\n-old\n+new\n';
+				if (command.startsWith('diff --name-status')) {return code ? `${code}\tf.ts` : '';}
+				if (command.startsWith('show')) {return 'conteudo';}
+				if (command.startsWith('diff')) {return '@@ -1,1 +1,1 @@\n-old\n+new\n';}
 				return '';
 			});
 			const fileDiff = await service.getFileDiff('a', 'b', 'f.ts');
@@ -123,8 +123,8 @@ describe('gitService.ts', () => {
 	test('deve cobrir caminhos de fallback e erro', async () => {
 		const service = stubbedService(async (args) => {
 			const command = args.join(' ');
-			if (command === 'rev-parse --git-dir') throw new Error('not git');
-			if (command === 'diff --stat a..b') return 'no summary';
+			if (command === 'rev-parse --git-dir') {throw new Error('not git');}
+			if (command === 'diff --stat a..b') {return 'no summary';}
 			throw new Error('missing');
 		});
 		assert.strictEqual(await service.isGitRepository(), false);

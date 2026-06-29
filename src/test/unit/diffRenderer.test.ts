@@ -72,9 +72,9 @@ describe('diffRenderer.ts', () => {
 	test('renderDiffHtml deve cobrir added/deleted/modified/error e o processamento em lotes', async () => {
 		const fakeService = {
 			getFileContent: async (ref: string, file: string) => {
-				if (file === 'error.ts') throw new Error('boom');
-				if (file.startsWith('added')) return ref === 'a' ? '' : 'new';
-				if (file.startsWith('deleted')) return ref === 'a' ? 'old' : '';
+				if (file === 'error.ts') {throw new Error('boom');}
+				if (file.startsWith('added')) {return ref === 'a' ? '' : 'new';}
+				if (file.startsWith('deleted')) {return ref === 'a' ? 'old' : '';}
 				return ref === 'a' ? 'old' : 'new';
 			}
 		} as unknown as GitService;
