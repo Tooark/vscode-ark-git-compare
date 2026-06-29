@@ -2,6 +2,10 @@
 
 Visual Studio Code extension to compare Git branches and commits with a side-by-side view, highlighting inline differences at the character level.
 
+[![Open VSX Version](https://img.shields.io/open-vsx/v/tooark/git-compare?label=Open%20VSX)](https://open-vsx.org/extension/tooark/git-compare)
+[![Open VSX Downloads](https://img.shields.io/open-vsx/dt/tooark/git-compare)](https://open-vsx.org/extension/tooark/git-compare)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
 🇺🇸 **English** · [🇧🇷 Português (Brasil)](https://github.com/Tooark/vscode-ark-git-compare/blob/main/README.pt-BR.md)
 
 ---
@@ -29,6 +33,21 @@ Visual Studio Code extension to compare Git branches and commits with a side-by-
 - 🧭 **Dedicated sidebar** to pick branches and commits without leaving the editor
 - ⚡ **Instant file list with on-demand diffs** — files load lazily and prefetch in the background, so even huge comparisons open without freezing
 - 🌐 **Internationalization** with English and Brazilian Portuguese
+
+---
+
+## 🚀 Getting Started
+
+### Install
+
+- **Open VSX:** [open-vsx.org/extension/tooark/git-compare](https://open-vsx.org/extension/tooark/git-compare)
+- **VS Code Marketplace:** [marketplace.visualstudio.com/items?itemName=tooark.git-compare](https://marketplace.visualstudio.com/items?itemName=tooark.git-compare)
+
+Or inside VS Code:
+
+1. Open **Extensions** (`Ctrl+Shift+X` / `Cmd+Shift+X`)
+2. Search for **Ark Git Compare**
+3. Click **Install**
 
 ---
 
