@@ -6,7 +6,7 @@ Extensão para o Visual Studio Code que permite comparar branches e commits do G
 [![Open VSX Downloads](https://img.shields.io/open-vsx/dt/tooark/git-compare)](https://open-vsx.org/extension/tooark/git-compare)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-[🇺🇸 English](https://github.com/Tooark/vscode-ark-git-compare/blob/main/README.md) · 🇧🇷 **Português (Brasil)**
+🌍 **Idiomas:** [![USA Flag](https://flagcdn.com/w20/us.png) English](https://github.com/Tooark/vscode-ark-git-compare/blob/main/README.md) · ![Brazil Flag](https://flagcdn.com/w20/br.png) **Português (este arquivo)**
 
 ---
 

@@ -6,7 +6,7 @@ Visual Studio Code extension to compare Git branches and commits with a side-by-
 [![Open VSX Downloads](https://img.shields.io/open-vsx/dt/tooark/git-compare)](https://open-vsx.org/extension/tooark/git-compare)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-🇺🇸 **English** · [🇧🇷 Português (Brasil)](https://github.com/Tooark/vscode-ark-git-compare/blob/main/README.pt-BR.md)
+🌍 **Languages:** ![USA Flag](https://flagcdn.com/w20/us.png) **English (this file)** · [![Brazil Flag](https://flagcdn.com/w20/br.png) Português](https://github.com/Tooark/vscode-ark-git-compare/blob/main/README.pt-BR.md)
 
 ---
 
