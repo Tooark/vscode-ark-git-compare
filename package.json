@@ -147,7 +147,7 @@
     "@vscode/test-electron": "^2.5.2",
     "dompurify": "^3.4.12",
     "esbuild": "^0.28.1",
-    "eslint": "^9.25.1",
+    "eslint": "^10.8.0",
     "typescript": "^5.8.3",
     "vitest": "^4.1.9"
   }
