@@ -3,8 +3,6 @@
 Visual Studio Code extension to compare Git branches and commits with a side-by-side view, highlighting inline differences at the character level.
 
 [![CI](https://github.com/Tooark/vscode-ark-git-compare/actions/workflows/ci.yml/badge.svg)](https://github.com/Tooark/vscode-ark-git-compare/actions/workflows/ci.yml)
-[![Marketplace Version](https://img.shields.io/visual-studio-marketplace/v/tooark.git-compare?label=Marketplace)](https://marketplace.visualstudio.com/items?itemName=tooark.git-compare)
-[![Marketplace Installs](https://img.shields.io/visual-studio-marketplace/i/tooark.git-compare?label=installs)](https://marketplace.visualstudio.com/items?itemName=tooark.git-compare)
 [![Open VSX Version](https://img.shields.io/open-vsx/v/tooark/git-compare?label=Open%20VSX)](https://open-vsx.org/extension/tooark/git-compare)
 [![Open VSX Downloads](https://img.shields.io/open-vsx/dt/tooark/git-compare)](https://open-vsx.org/extension/tooark/git-compare)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)

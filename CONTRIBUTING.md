@@ -33,15 +33,15 @@ changes, report bugs, and submit code.
 
 ## Repository layout
 
-| Path                | Purpose                                              |
-| ------------------- | ---------------------------------------------------- |
-| `src/`              | Extension source (TypeScript)                        |
-| `src/test/`         | Extension host tests (Mocha via `@vscode/test-cli`)  |
-| `l10n/`             | Localization bundles (`en`, `pt-BR`)                 |
-| `media/`            | Icons, GIFs, and webview assets                      |
-| `notes/`            | Release notes per version (`notes/v<version>.md`)    |
-| `esbuild.mjs`       | Bundler configuration                                |
-| `vitest.config.ts`  | Unit test configuration (Vitest)                     |
+| Path               | Purpose                                             |
+| ------------------ | --------------------------------------------------- |
+| `src/`             | Extension source (TypeScript)                       |
+| `src/test/`        | Extension host tests (Mocha via `@vscode/test-cli`) |
+| `l10n/`            | Localization bundles (`en`, `pt-BR`)                |
+| `media/`           | Icons, GIFs, and webview assets                     |
+| `notes/`           | Release notes per version (`notes/v<version>.md`)   |
+| `esbuild.mjs`      | Bundler configuration                               |
+| `vitest.config.ts` | Unit test configuration (Vitest)                    |
 
 ---
 
