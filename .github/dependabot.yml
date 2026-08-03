@@ -1,0 +1,127 @@
+# ==============================================================================
+# Ark Git Compare — Dependabot configuration
+# ==============================================================================
+# Docs: https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
+#
+# Policy:
+#   - Security updates: always accepted (opened immediately by Dependabot).
+#   - Patch/minor updates: grouped weekly to reduce PR noise.
+#   - Major updates: opened individually for careful review.
+# ==============================================================================
+
+version: 2
+
+updates:
+  # --------------------------------------------------------------------------
+  # JavaScript / TypeScript (pnpm)
+  # --------------------------------------------------------------------------
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "07:00"
+      timezone: "America/Sao_Paulo"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+    commit-message:
+      prefix: "build"
+      prefix-development: "chore"
+      include: "scope"
+    groups:
+      # Linting / formatting toolchain.
+      lint-format:
+        patterns:
+          - "eslint"
+          - "eslint-*"
+          - "@typescript-eslint/*"
+          - "typescript-eslint"
+        update-types:
+          - "minor"
+          - "patch"
+      # TypeScript + type definitions.
+      typescript:
+        patterns:
+          - "typescript"
+          - "@types/*"
+        update-types:
+          - "minor"
+          - "patch"
+      # Testing stack (Vitest + VS Code test harness).
+      testing:
+        patterns:
+          - "vitest"
+          - "@vitest/*"
+          - "@vscode/test-cli"
+          - "@vscode/test-electron"
+        update-types:
+          - "minor"
+          - "patch"
+      # Build / packaging tooling for the extension.
+      build-tools:
+        patterns:
+          - "esbuild"
+          - "@vscode/vsce"
+          - "@vscode/*"
+        update-types:
+          - "minor"
+          - "patch"
+      # Everything else, minor/patch, in one PR.
+      other-minor-patch:
+        patterns:
+          - "*"
+        exclude-patterns:
+          - "eslint"
+          - "eslint-*"
+          - "@typescript-eslint/*"
+          - "typescript-eslint"
+          - "typescript"
+          - "@types/*"
+          - "vitest"
+          - "@vitest/*"
+          - "esbuild"
+          - "@vscode/vsce"
+          - "@vscode/*"
+        update-types:
+          - "minor"
+          - "patch"
+    ignore:
+      # TypeScript 7 is the native (Go) preview compiler. Our lint toolchain
+      # (@typescript-eslint) still declares a peer range of `>=4.8.4 <6.1.0`,
+      # so a major bump breaks ESLint. Block TS majors until @typescript-eslint
+      # officially supports v7; 5.x minor/patch updates keep flowing normally.
+      - dependency-name: "typescript"
+        update-types:
+          - "version-update:semver-major"
+      # A extensão declara engines.vscode ^1.95.0, cujo extension host roda
+      # Node 20. @types/node acima do runtime expõe tipos de APIs inexistentes
+      # em produção; majors ficam bloqueados até elevarmos o engine mínimo.
+      - dependency-name: "@types/node"
+        update-types:
+          - "version-update:semver-major"
+
+  # --------------------------------------------------------------------------
+  # GitHub Actions (workflow dependencies)
+  # --------------------------------------------------------------------------
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "07:00"
+      timezone: "America/Sao_Paulo"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "ci"
+    commit-message:
+      prefix: "ci"
+      include: "scope"
+    groups:
+      actions-minor-patch:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"

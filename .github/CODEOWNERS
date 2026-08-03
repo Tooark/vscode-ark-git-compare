@@ -1,0 +1,34 @@
+# ==============================================================================
+# Ark Git Compare — CODEOWNERS
+# ==============================================================================
+# GitHub uses this file to auto-request reviews from the right owner.
+# Rules are matched top-to-bottom; the LAST matching rule wins per file.
+#
+# NOTE: uses the maintainer's personal handle (@paulosfjunior). Swap to a
+# @Tooark/... team once the org has 2+ reviewers.
+# ==============================================================================
+
+# Global default — anything not matched by a later rule.
+*                                   @paulosfjunior
+
+# Governance, legal and licensing.
+/LICENSE                            @paulosfjunior
+/CODE_OF_CONDUCT.md                 @paulosfjunior
+/SECURITY.md                        @paulosfjunior
+/SUPPORT.md                         @paulosfjunior
+/CONTRIBUTING.md                    @paulosfjunior
+
+# CI/CD and GitHub configuration (supply-chain / release sensitive).
+/.github/                           @paulosfjunior
+/.github/workflows/                 @paulosfjunior
+/.github/CODEOWNERS                 @paulosfjunior
+
+# Build system, manifests and lockfiles (supply-chain root).
+/package.json                       @paulosfjunior
+/pnpm-lock.yaml                     @paulosfjunior
+/pnpm-workspace.yaml                @paulosfjunior
+/.npmrc                             @paulosfjunior
+/esbuild.mjs                        @paulosfjunior
+/tsconfig.json                      @paulosfjunior
+/vitest.config.ts                   @paulosfjunior
+/.vscode-test.mjs                   @paulosfjunior

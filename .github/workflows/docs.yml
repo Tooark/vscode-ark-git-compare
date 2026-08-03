@@ -1,0 +1,80 @@
+# ==============================================================================
+# Ark Git Compare — Documentation checks
+# ==============================================================================
+# Runs on PRs touching Markdown (READMEs, notes/). Enforces:
+#   - Markdown style consistency (markdownlint)
+#   - No broken links (lychee)
+#
+# Config files:
+#   .markdownlint.json  — style rules (relaxed for tables and long lines)
+#   .lycheeignore       — hosts/paths we intentionally skip
+# ==============================================================================
+
+name: Docs
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "**/*.md"
+      - ".markdownlint.json"
+      - ".lycheeignore"
+      - ".github/workflows/docs.yml"
+  push:
+    branches: [main]
+    paths:
+      - "**/*.md"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: docs-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  markdownlint:
+    name: markdownlint
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Run markdownlint-cli2
+        uses: DavidAnson/markdownlint-cli2-action@6bf21b07787794f89a243495939cd651942aeabe # v24.1.0
+        with:
+          globs: |
+            **/*.md
+            !node_modules
+            !**/dist/**
+            !**/out/**
+            !**/coverage/**
+            !**/CHANGELOG.md
+
+  lychee:
+    name: Link check (lychee)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Restore lychee cache
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: .lycheecache
+          key: cache-lychee-${{ github.sha }}
+          restore-keys: cache-lychee-
+
+      - name: Run lychee
+        uses: lycheeverse/lychee-action@e7477775783ea5526144ba13e8db5eec57747ce8 # v2.9.0
+        with:
+          args: >-
+            --cache
+            --max-cache-age 1d
+            --no-progress
+            --exclude-path node_modules
+            --exclude-loopback
+            --accept 200,206,301,302,304,403,429
+            './**/*.md'
+          fail: true
+          jobSummary: true

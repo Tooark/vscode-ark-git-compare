@@ -1,4 +1,15 @@
-github: [paulosfjunior]
+# ==============================================================================
+# Ark Git Compare — FUNDING configuration
+# ==============================================================================
+# Enables the "Sponsor" button on the GitHub repository page.
+# Handles live under the maintainer's personal accounts (Paulo Sergio de
+# Freitas Junior). Migrate to a Tooark org account once it is registered.
+#
+# Docs: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/displaying-a-sponsor-button-in-your-repository
+# ==============================================================================
+
+# GitHub Sponsors — primary channel (username only, not the full URL).
+github: paulosfjunior
+
+# Ko-fi — one-off and recurring tips (username only, not the full URL).
 ko_fi: paulosfjunior
-custom:
-  - "https://www.paypal.com/donate/?business=62KETU4PXBWZC&no_recurring=0&item_name=Ol%C3%A1%21+Sou+o+fundador+e+mantenedor+da+Tooark+%28tooark.com%29+%E2%80%94%0Aum+ecossistema+de+projetos+open+source.%0AObrigado+pelo+apoio%21+%F0%9F%92%9A&currency_code=BRL"

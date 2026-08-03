@@ -2,9 +2,14 @@
 
 Visual Studio Code extension to compare Git branches and commits with a side-by-side view, highlighting inline differences at the character level.
 
+[![CI](https://github.com/Tooark/vscode-ark-git-compare/actions/workflows/ci.yml/badge.svg)](https://github.com/Tooark/vscode-ark-git-compare/actions/workflows/ci.yml)
+[![Marketplace Version](https://img.shields.io/visual-studio-marketplace/v/tooark.git-compare?label=Marketplace)](https://marketplace.visualstudio.com/items?itemName=tooark.git-compare)
+[![Marketplace Installs](https://img.shields.io/visual-studio-marketplace/i/tooark.git-compare?label=installs)](https://marketplace.visualstudio.com/items?itemName=tooark.git-compare)
 [![Open VSX Version](https://img.shields.io/open-vsx/v/tooark/git-compare?label=Open%20VSX)](https://open-vsx.org/extension/tooark/git-compare)
 [![Open VSX Downloads](https://img.shields.io/open-vsx/dt/tooark/git-compare)](https://open-vsx.org/extension/tooark/git-compare)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![GitHub Sponsors](https://img.shields.io/badge/GitHub%20Sponsors-sponsor-EA4AAA?logo=githubsponsors&logoColor=white)](https://github.com/sponsors/paulosfjunior)
+[![Ko-fi](https://img.shields.io/badge/Ko--fi-support-FF5E5B?logo=kofi&logoColor=white)](https://ko-fi.com/paulosfjunior)
 
 🌍 **Languages:** ![USA Flag](https://flagcdn.com/w20/us.png) **English (this file)** · [![Brazil Flag](https://flagcdn.com/w20/br.png) Português](https://github.com/Tooark/vscode-ark-git-compare/blob/main/README.pt-BR.md)
 
@@ -113,7 +118,6 @@ If this extension helps your workflow, consider supporting its development:
 
 - 💙 [GitHub Sponsors](https://github.com/sponsors/paulosfjunior)
 - ☕ [Ko-fi](https://ko-fi.com/paulosfjunior)
-- 💸 [PayPal](https://www.paypal.com/donate/?business=62KETU4PXBWZC&no_recurring=0&item_name=Ol%C3%A1%21+Sou+o+fundador+e+mantenedor+da+Tooark+%28tooark.com%29+%E2%80%94%0Aum+ecossistema+de+projetos+open+source.%0AObrigado+pelo+apoio%21+%F0%9F%92%9A&currency_code=BRL)
 
 Every contribution helps keep the project maintained and improving. Thank you! 🙏
 
