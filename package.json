@@ -142,13 +142,13 @@
     "@types/vscode": "^1.95.0",
     "@typescript-eslint/eslint-plugin": "^8.65.0",
     "@typescript-eslint/parser": "^8.65.0",
-    "@vitest/coverage-v8": "^4.1.10",
+    "@vitest/coverage-v8": "^4.1.11",
     "@vscode/test-cli": "0.0.15",
     "@vscode/test-electron": "^3.1.0",
     "dompurify": "^3.4.12",
     "esbuild": "^0.28.1",
     "eslint": "^10.8.0",
     "typescript": "^5.8.3",
-    "vitest": "^4.1.10"
+    "vitest": "^4.1.11"
   }
 }
