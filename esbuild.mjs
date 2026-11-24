@@ -1,3 +1,4 @@
+import { copyFileSync } from 'node:fs';
 import * as esbuild from 'esbuild';
 
 const production = process.argv.includes('--production');
@@ -41,7 +42,17 @@ const buildOptions = {
   plugins: [esbuildProblemMatcherPlugin]
 };
 
+/**
+ * Copia para media/ o DOMPurify que o webview carrega, para que o arquivo
+ * distribuído seja sempre a versão instalada. Falha o build se ele não existir.
+ */
+function copyDomPurify () {
+  copyFileSync('node_modules/dompurify/dist/purify.min.js', 'media/purify.min.js');
+}
+
 async function main () {
+  copyDomPurify();
+
   if (watch) {
     const ctx = await esbuild.context(buildOptions);
     await ctx.watch();
