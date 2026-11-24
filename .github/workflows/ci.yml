@@ -55,6 +55,18 @@ jobs:
       - name: Test
         run: xvfb-run -a pnpm test
 
+      # Same command as publish.yml, so errors only vsce reports (for example
+      # @types/vscode newer than engines.vscode) show up before the merge.
+      - name: Package (.vsix)
+        run: pnpm dlx @vscode/vsce package --no-dependencies --out extension.vsix
+
+      - name: Check VSIX contents
+        run: |
+          set -euo pipefail
+          unzip -p extension.vsix extension/dist/extension.js | cmp - dist/extension.js
+          unzip -p extension.vsix extension/media/purify.min.js | cmp - node_modules/dompurify/dist/purify.min.js
+          echo "VSIX ships the built extension and the installed DOMPurify. ✅"
+
   repo-hygiene:
     name: Repository hygiene
     runs-on: ubuntu-latest
