@@ -100,6 +100,14 @@ updates:
       - dependency-name: "@types/node"
         update-types:
           - "version-update:semver-major"
+      # @types/vscode precisa acompanhar engines.vscode (^1.95.0): o vsce recusa
+      # empacotar quando os tipos são mais novos que o engine mínimo, e o CI das
+      # PRs não roda o `vsce package`, então a quebra só apareceria na
+      # publicação. Subir junto com engines.vscode, manualmente.
+      - dependency-name: "@types/vscode"
+        update-types:
+          - "version-update:semver-major"
+          - "version-update:semver-minor"
 
   # --------------------------------------------------------------------------
   # GitHub Actions (workflow dependencies)
