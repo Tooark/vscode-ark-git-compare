@@ -2,6 +2,11 @@
 
 Resumo das principais mudanças por versão do projeto.
 
+## v1.1.1 - 2026-11-24
+
+- Atualização do DOMPurify distribuído com o Webview (`media/purify.min.js`) de `3.4.7` para `3.4.18`. As atualizações anteriores, incluindo a da v1.0.6, alteravam apenas a dependência de desenvolvimento.
+- Atualização de dependências de desenvolvimento (`vitest`, `vite`, `js-yaml`, `source-map-js`, `brace-expansion` e outras) que, junto com a do `dompurify`, corrige 14 alertas de segurança do Dependabot.
+
 ## v1.1.0 - 2026-06-29
 
 - Renderização sob demanda: a lista de arquivos aparece instantaneamente (colapsada) e o diff de cada arquivo é carregado ao expandir, com pré-carregamento em segundo plano (concorrência limitada), eliminando o congelamento em comparações grandes.
