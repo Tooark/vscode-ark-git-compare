@@ -2,5 +2,12 @@ overrides:
   fast-uri: ^3.1.2
   serialize-javascript: ^7.0.5
   mocha>diff: ^8.0.3
+  # GHSA-g3hv-75wg-m249 (minimatch) e GHSA-3g3m-2fjr-6pw4 (glob): o
+  # @vscode/test-cli 0.0.15 e o mocha 11 ainda pedem versões vulneráveis. Manter
+  # as duas linhas juntas: o glob 10 do mocha com minimatch 11 não encontra
+  # arquivos e não dá erro. Remover quando o test-cli e o mocha pedirem glob 14 e
+  # minimatch 11.
+  glob: ^14.0.6
+  minimatch: ^11.0.9
 allowBuilds:
   esbuild: true
